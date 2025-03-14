@@ -1,27 +1,42 @@
-// 仮想DOMの簡易的な実装例
+/**
+ * Chapter 6: 仮想DOM（Virtual DOM）の実装
+ *
+ * このファイルでは、ReactやAngularなどのフレームワークで使用される
+ * 仮想DOM（Virtual DOM）の簡易的な実装を示しています。
+ *
+ * 仮想DOMは、実際のDOMの軽量な表現であり、状態の変更に基づいて
+ * 効率的にUIを更新するために使用されます。
+ *
+ * 主な手順:
+ * 1. 状態に基づいて仮想DOMツリーを生成
+ * 2. 前回の仮想DOMと新しい仮想DOMを比較して差分を計算
+ * 3. 計算された差分だけを実際のDOMに適用
+ */
 
 // 仮想DOMノードを表す簡易的なクラス
 class VNode {
   constructor(type, props, children) {
-    this.type = type;
-    this.props = props || {};
-    this.children = children || [];
+    this.type = type; // HTML要素の種類（div, span, buttonなど）
+    this.props = props || {}; // 要素の属性（id, class, styleなど）
+    this.children = children || []; // 子要素（他のVNodeまたはテキスト）
   }
 }
 
 // 仮想DOMツリーを生成する関数
+// 状態（state）に基づいて仮想DOMツリーを構築
 function renderVirtualDOM(state) {
   // 状態に基づいて仮想DOMツリーを生成
   return new VNode("div", { id: "app" }, [
-    new VNode("h1", {}, [`カウント: ${state.count}`]),
-    new VNode("button", { onClick: "increment()" }, ["増加"]),
-    new VNode("button", { onClick: "reset()" }, ["リセット"]),
+    new VNode("h1", {}, [`カウント: ${state.count}`]), // カウント表示
+    new VNode("button", { onClick: "increment()" }, ["増加"]), // 増加ボタン
+    new VNode("button", { onClick: "reset()" }, ["リセット"]), // リセットボタン
   ]);
 }
 
 // 2つの仮想DOMツリーの差分を計算する関数
+// この関数は、変更された部分だけを特定するために使用されます
 function diff(oldVTree, newVTree) {
-  const patches = [];
+  const patches = []; // 変更点を格納する配列
 
   // 引数のチェック
   if (!oldVTree || !newVTree) {
@@ -34,12 +49,14 @@ function diff(oldVTree, newVTree) {
   newVTree.children = newVTree.children || [];
 
   // 型が変わった場合は完全に置き換え
+  // （例: divからspanに変更された場合）
   if (oldVTree.type !== newVTree.type) {
     patches.push({ type: "REPLACE", newVTree });
     return patches;
   }
 
   // プロパティの変更を検出
+  // （例: classやstyleが変更された場合）
   if (JSON.stringify(oldVTree.props) !== JSON.stringify(newVTree.props)) {
     patches.push({ type: "PROPS", props: newVTree.props });
   }
@@ -56,6 +73,7 @@ function diff(oldVTree, newVTree) {
       typeof oldVTree.children[i] !== "object" ||
       typeof newVTree.children[i] !== "object"
     ) {
+      // テキストノードの内容が変更された場合
       if (oldVTree.children[i] !== newVTree.children[i]) {
         patches.push({
           type: "TEXT_CHANGE",
@@ -74,11 +92,13 @@ function diff(oldVTree, newVTree) {
 
   // 子要素の追加または削除
   if (oldVTree.children.length > newVTree.children.length) {
+    // 子要素が削除された場合
     patches.push({
       type: "REMOVE_CHILDREN",
       startIndex: newVTree.children.length,
     });
   } else if (newVTree.children.length > oldVTree.children.length) {
+    // 子要素が追加された場合
     patches.push({
       type: "ADD_CHILDREN",
       children: newVTree.children.slice(oldVTree.children.length),
@@ -89,29 +109,33 @@ function diff(oldVTree, newVTree) {
 }
 
 // 差分を実際のDOMに適用する関数
+// 実際のアプリケーションでは、この関数がDOMを更新します
 function patch(domNode, patches) {
   console.log("DOMに適用される差分:", patches);
   // 実際のアプリケーションでは、ここで実際のDOM操作を行う
   // この例では簡略化のため、差分のログ出力のみ行う
 }
 
-// 使用例
-const state1 = { count: 0 };
-const state2 = { count: 1 };
+// 使用例 - 初期状態と更新後の状態
+const state1 = { count: 0 }; // 初期状態
+const state2 = { count: 1 }; // 更新後の状態
 
+// 初期状態と更新後の状態に基づいて仮想DOMを生成
 const vdom1 = renderVirtualDOM(state1);
 const vdom2 = renderVirtualDOM(state2);
 
+// 差分を計算
 const patches = diff(vdom1, vdom2);
 console.log("検出された差分:", patches);
 
 // 実際のDOMがあれば適用する
 // patch(document.getElementById('app'), patches);
 
-// 前回の仮想DOMを保存
+// 前回の仮想DOMを保存（次回の比較のため）
 let previousVirtualDOM = vdom2;
 
 // UIを更新する関数
+// この関数は、状態が変更されるたびに呼び出されます
 function updateUI(newState) {
   // 1. 新しい仮想DOMツリーを生成
   const newVirtualDOM = renderVirtualDOM(newState);
@@ -123,10 +147,20 @@ function updateUI(newState) {
   // patch(document.getElementById('app'), patches);
   console.log("UIを更新:", patches);
 
-  // 4. 新しい仮想DOMを保存
+  // 4. 新しい仮想DOMを保存（次回の比較のため）
   previousVirtualDOM = newVirtualDOM;
 }
 
 // 状態を更新してUIを更新する例
 const state3 = { count: 2 };
 updateUI(state3);
+
+/**
+ * 仮想DOMの利点:
+ * 1. パフォーマンス: 実際のDOMの操作は最小限に抑えられる
+ * 2. 宣言的UI: 状態に基づいてUIがどのように見えるべきかを宣言的に記述できる
+ * 3. 抽象化: DOMの直接操作を抽象化し、コードの可読性と保守性を向上
+ *
+ * この仕組みは、ReactやAngularなどのフレームワークの中核技術であり、
+ * 状態の変更に基づいて効率的にUIを更新するために使用されています。
+ */

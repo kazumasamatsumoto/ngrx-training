@@ -1,39 +1,60 @@
-// リデューサー（Reducer）の実装例
+/**
+ * Chapter 11: リデューサー（Reducer）
+ *
+ * このファイルでは、ReduxやNgRxの中核となるリデューサーの実装を示しています。
+ * リデューサーは、現在の状態とアクションを受け取り、新しい状態を返す純粋関数です。
+ *
+ * リデューサーの特徴:
+ * 1. 純粋関数: 同じ入力に対して常に同じ出力を返し、副作用がない
+ * 2. イミュータブル: 状態を直接変更せず、新しい状態オブジェクトを返す
+ * 3. 予測可能: アクションタイプに基づいて状態を更新する明確なロジック
+ * 4. 合成可能: 複雑な状態ツリーを管理するために、小さなリデューサーに分割可能
+ */
 
 // 初期状態
+// アプリケーションの初期状態を定義
 const initialState = {
-  count: 0,
-  user: null,
-  todos: [],
+  count: 0, // カウンター値
+  user: null, // ログインユーザー情報
+  todos: [], // TODOリスト
   settings: {
-    theme: "light",
-    notifications: true,
+    // アプリケーション設定
+    theme: "light", // テーマ（light/dark）
+    notifications: true, // 通知設定
   },
-  loading: false,
-  error: null,
+  loading: false, // データ読み込み中フラグ
+  error: null, // エラー情報
 };
 
 // メインリデューサー
+// すべてのアクションを処理する単一のリデューサー
 function rootReducer(state = initialState, action) {
   switch (action.type) {
-    // カウンター関連
+    // カウンター関連のアクション
     case "INCREMENT":
+      // カウントを1増やす
       return { ...state, count: state.count + 1 };
     case "DECREMENT":
+      // カウントを1減らす
       return { ...state, count: state.count - 1 };
     case "ADD_NUMBER":
+      // カウントを指定した値だけ増やす
       return { ...state, count: state.count + action.payload };
     case "RESET_COUNT":
+      // カウントを0にリセット
       return { ...state, count: 0 };
 
-    // ユーザー関連
+    // ユーザー関連のアクション
     case "SET_USER":
+      // ユーザー情報を設定
       return { ...state, user: action.payload };
     case "CLEAR_USER":
+      // ユーザー情報をクリア
       return { ...state, user: null };
 
-    // TODO関連
+    // TODO関連のアクション
     case "ADD_TODO":
+      // 新しいTODOを追加
       return {
         ...state,
         todos: [
@@ -42,6 +63,7 @@ function rootReducer(state = initialState, action) {
         ],
       };
     case "TOGGLE_TODO":
+      // 指定したTODOの完了状態を切り替え
       return {
         ...state,
         todos: state.todos.map((todo) =>
@@ -51,18 +73,21 @@ function rootReducer(state = initialState, action) {
         ),
       };
     case "REMOVE_TODO":
+      // 指定したTODOを削除
       return {
         ...state,
         todos: state.todos.filter((todo) => todo.id !== action.payload),
       };
 
-    // 設定関連
+    // 設定関連のアクション
     case "CHANGE_THEME":
+      // テーマを変更
       return {
         ...state,
         settings: { ...state.settings, theme: action.payload },
       };
     case "TOGGLE_NOTIFICATIONS":
+      // 通知設定を切り替え
       return {
         ...state,
         settings: {
@@ -71,27 +96,32 @@ function rootReducer(state = initialState, action) {
         },
       };
 
-    // API関連
+    // API関連のアクション
     case "FETCH_DATA_START":
+      // データ取得開始
       return { ...state, loading: true, error: null };
     case "FETCH_DATA_SUCCESS":
+      // データ取得成功
       return { ...state, loading: false, [action.dataKey]: action.payload };
     case "FETCH_DATA_ERROR":
+      // データ取得エラー
       return { ...state, loading: false, error: action.payload };
 
     // デフォルト
     default:
+      // 未知のアクションタイプの場合は状態を変更しない
       return state;
   }
 }
 
 // 使用例
+// リデューサーを使って状態を更新する例
 console.log("初期状態:");
-let state = rootReducer(undefined, { type: "@@INIT" });
+let state = rootReducer(undefined, { type: "@@INIT" }); // 初期状態を取得
 console.log(state);
 
 console.log("\nカウンターを増加:");
-state = rootReducer(state, { type: "INCREMENT" });
+state = rootReducer(state, { type: "INCREMENT" }); // カウントを1増やす
 console.log(state);
 
 console.log("\nユーザーを設定:");
@@ -128,3 +158,16 @@ state = rootReducer(state, {
   ],
 });
 console.log(state);
+
+/**
+ * リデューサーの重要なポイント:
+ *
+ * 1. スイッチ文: 一般的にリデューサーはswitch文を使ってアクションタイプごとに処理を分岐
+ * 2. イミュータビリティ: スプレッド構文（...）を使って、状態を直接変更せず新しいオブジェクトを作成
+ * 3. 構造共有: 変更されない部分のオブジェクトは再利用される
+ * 4. 単一責任: 実際のアプリケーションでは、状態の各部分を担当する小さなリデューサーに分割することが一般的
+ *
+ * 実際のReduxやNgRxでは、combineReducersやcreateReducerなどの関数を使用して、
+ * 複数のリデューサーを組み合わせることができます。これにより、大規模なアプリケーションでも
+ * 状態管理を整理しやすくなります。
+ */

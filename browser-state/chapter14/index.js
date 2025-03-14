@@ -1,9 +1,47 @@
+/**
+ * 第14章: コンポーネントベースの状態管理
+ *
+ * このファイルでは、Reactのようなコンポーネントベースのフレームワークにおける状態管理の基本概念を示しています。
+ * 実際のReactは使用せず、その動作を模倣しています。
+ *
+ * コンポーネントベースの状態管理の特徴:
+ * 1. ローカル状態 - 各コンポーネントが独自の状態を管理
+ * 2. 単方向データフロー - 親から子へのデータの流れ
+ * 3. イベントハンドラー - ユーザー操作に応じた状態更新
+ * 4. 再レンダリング - 状態変更時の自動UI更新
+ *
+ * このアプローチの利点:
+ * - カプセル化 - コンポーネントが自身の状態を管理
+ * - 再利用性 - 状態を持つコンポーネントを複数の場所で使用可能
+ * - テスト容易性 - 独立したコンポーネントは単体テストが容易
+ *
+ * 課題:
+ * - 状態の共有 - 複数のコンポーネント間での状態共有が複雑になる場合がある
+ * - 深いコンポーネントツリー - props drilling問題が発生する可能性
+ * - 複雑な状態ロジック - 大規模アプリケーションでは管理が難しくなる
+ *
+ * これらの課題に対処するために、Reduxなどのグローバル状態管理ライブラリや
+ * Reactの Context APIなどが使用されます。
+ */
+
 // Reactコンポーネントの例（実際のReactは使用していません）
 
-// ReactのuseStateフックの簡易的な実装
+/**
+ * ReactのuseStateフックの簡易的な実装
+ * フックは関数コンポーネント内で状態を使用するためのReactの機能
+ *
+ * @param {any} initialState - 状態の初期値
+ * @returns {Array} - [現在の状態, 状態を更新する関数]
+ */
 function useState(initialState) {
   let state = initialState;
 
+  /**
+   * 状態を更新する関数
+   * 新しい状態値または現在の状態を引数に取る関数を受け取る
+   *
+   * @param {any|Function} newState - 新しい状態値または状態更新関数
+   */
   function setState(newState) {
     if (typeof newState === "function") {
       state = newState(state);
@@ -19,16 +57,23 @@ function useState(initialState) {
   return [state, setState];
 }
 
-// Reactのコンポーネントを模倣
+/**
+ * カウンターコンポーネント
+ * 数値の増減を管理する単純なコンポーネント
+ *
+ * @param {Object} props - コンポーネントのプロパティ
+ * @param {number} props.initialCount - カウンターの初期値
+ * @returns {Object} - 仮想DOMの表現
+ */
 function Counter({ initialCount = 0 }) {
   // コンポーネントの状態
   const [count, setCount] = useState(initialCount);
 
-  // イベントハンドラー
+  // イベントハンドラー - ユーザー操作に応じて状態を更新
   const increment = () => setCount(count + 1);
   const decrement = () => setCount(count - 1);
   const reset = () => setCount(initialCount);
-  const incrementByFive = () => setCount((prevCount) => prevCount + 5);
+  const incrementByFive = () => setCount((prevCount) => prevCount + 5); // 関数形式の更新
 
   // 仮想DOMの返却（実際のReactではJSXを使用）
   return {
@@ -70,7 +115,13 @@ function Counter({ initialCount = 0 }) {
   };
 }
 
-// TodoListコンポーネント
+/**
+ * TODOリストコンポーネント
+ * TODOアイテムの追加、切り替え、削除機能を持つコンポーネント
+ * 複数の状態を管理する例を示しています
+ *
+ * @returns {Object} - 仮想DOMの表現
+ */
 function TodoList() {
   // 状態: TODOリスト
   const [todos, setTodos] = useState([
@@ -81,7 +132,10 @@ function TodoList() {
   // 状態: 新しいTODOの入力値
   const [newTodo, setNewTodo] = useState("");
 
-  // TODOを追加
+  /**
+   * TODOを追加するイベントハンドラー
+   * 空の入力は無視し、新しいTODOをリストに追加
+   */
   const addTodo = () => {
     if (newTodo.trim() === "") return;
 
@@ -89,7 +143,11 @@ function TodoList() {
     setNewTodo("");
   };
 
-  // TODOの完了状態を切り替え
+  /**
+   * TODOの完了状態を切り替えるイベントハンドラー
+   *
+   * @param {number} id - 切り替えるTODOのID
+   */
   const toggleTodo = (id) => {
     setTodos(
       todos.map((todo) =>
@@ -98,7 +156,11 @@ function TodoList() {
     );
   };
 
-  // TODOを削除
+  /**
+   * TODOを削除するイベントハンドラー
+   *
+   * @param {number} id - 削除するTODOのID
+   */
   const removeTodo = (id) => {
     setTodos(todos.filter((todo) => todo.id !== id));
   };
@@ -160,7 +222,11 @@ function TodoList() {
   };
 }
 
-// レンダリング関数（実際のReactのレンダリングを模倣）
+/**
+ * レンダリング関数
+ * 実際のReactのレンダリングプロセスを模倣
+ * 状態が変更されるたびに呼び出される
+ */
 function render() {
   console.log("コンポーネントがレンダリングされました");
   // 実際のアプリケーションでは、ここでDOMを更新する
