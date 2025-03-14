@@ -23,6 +23,16 @@ function renderVirtualDOM(state) {
 function diff(oldVTree, newVTree) {
   const patches = [];
 
+  // 引数のチェック
+  if (!oldVTree || !newVTree) {
+    console.log("警告: 無効な仮想DOMツリーが渡されました");
+    return patches;
+  }
+
+  // oldVTreeまたはnewVTreeにchildrenプロパティがない場合は空配列を設定
+  oldVTree.children = oldVTree.children || [];
+  newVTree.children = newVTree.children || [];
+
   // 型が変わった場合は完全に置き換え
   if (oldVTree.type !== newVTree.type) {
     patches.push({ type: "REPLACE", newVTree });
@@ -41,9 +51,24 @@ function diff(oldVTree, newVTree) {
   );
 
   for (let i = 0; i < minLength; i++) {
-    const childPatches = diff(oldVTree.children[i], newVTree.children[i]);
-    if (childPatches.length > 0) {
-      patches.push({ type: "CHILD", index: i, patches: childPatches });
+    // 子要素がプリミティブ型（文字列など）の場合
+    if (
+      typeof oldVTree.children[i] !== "object" ||
+      typeof newVTree.children[i] !== "object"
+    ) {
+      if (oldVTree.children[i] !== newVTree.children[i]) {
+        patches.push({
+          type: "TEXT_CHANGE",
+          index: i,
+          content: newVTree.children[i],
+        });
+      }
+    } else {
+      // 子要素がオブジェクト（VNode）の場合は再帰的に比較
+      const childPatches = diff(oldVTree.children[i], newVTree.children[i]);
+      if (childPatches.length > 0) {
+        patches.push({ type: "CHILD", index: i, patches: childPatches });
+      }
     }
   }
 
