@@ -164,7 +164,7 @@ const vdom2 = renderVirtualDOM(state2);
 
 // 差分を計算
 const patches = diff(vdom1, vdom2);
-console.log("検出された差分:", patches);
+console.log("検出された差分:", JSON.stringify(patches, null, 2));
 
 // 実際のDOMがあれば適用する
 // patch(document.getElementById('app'), patches);
@@ -183,7 +183,7 @@ function updateUI(newState) {
 
   // 3. 実際のDOMに差分だけを適用（実際のDOMがある場合）
   // patch(document.getElementById('app'), patches);
-  console.log("UIを更新:", patches);
+  console.log("UIを更新:", JSON.stringify(patches, null, 2));
 
   // 4. 新しい仮想DOMを保存（次回の比較のため）
   previousVirtualDOM = newVirtualDOM;
