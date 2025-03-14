@@ -91,6 +91,72 @@ console.time("メモ化されたフィボナッチ（2回目）");
 console.log(`memoizedFibonacci(10) = ${memoizedFibonacci(10)}`);
 console.timeEnd("メモ化されたフィボナッチ（2回目）");
 
+// 計算コストの高い関数の例（配列の要素の二乗和を計算）
+function calculateSquareSum(numbers) {
+  console.log(`calculateSquareSum が呼び出されました。入力: [${numbers}]`);
+  
+  // 計算処理が重いことをシミュレートするため、少し待機
+  const startTime = Date.now();
+  while (Date.now() - startTime < 100) {
+    // 100ミリ秒待機（実際の重い計算処理をシミュレート）
+  }
+  
+  // 各要素を二乗して合計する
+  return numbers.reduce((sum, n) => {
+    const square = n * n;
+    console.log(`${n}の二乗: ${square}`);
+    return sum + square;
+  }, 0);
+}
+
+// メモ化された計算関数
+const memoizedSquareSum = memoize(calculateSquareSum);
+
+/**
+ * メモ化の効果と原理の実演
+ * 
+ * 【メモ化の効果】
+ * 1回目の呼び出し: 実際に計算処理が実行されます。
+ * 2回目の呼び出し: 同じ入力に対しては計算処理は実行されず、キャッシュから結果が返されます。
+ * 
+ * 【メモ化の原理】
+ * 1. 関数が呼び出されると、まず引数（入力値）をキーとしてキャッシュを検索します。
+ * 2. キャッシュにヒットした場合（同じ引数で以前に呼び出された場合）:
+ *    - 計算処理をスキップし、保存されていた結果をそのまま返します。
+ *    - これにより計算コストを大幅に削減できます。
+ * 3. キャッシュにヒットしなかった場合（初めての引数の組み合わせ）:
+ *    - 実際に計算処理を実行します。
+ *    - 結果をキャッシュに保存し、将来の同じ入力に備えます。
+ *    - 結果を呼び出し元に返します。
+ * 
+ * 【技術的な実装】
+ * - クロージャを使用して、関数の外部にキャッシュ（Map）を保持します。
+ * - 引数をJSON文字列化してキャッシュのキーとして使用します。
+ * - 関数の純粋性（同じ入力に対して常に同じ出力を返すこと）が重要です。
+ */
+
+// 同じ入力で2回呼び出し、メモ化の効果を確認
+const testArray = [1, 2, 3, 4, 5];
+
+console.log("\n--- メモ化された計算関数のデモ ---");
+console.log("1回目の呼び出し（計算処理が実行される）:");
+console.time("1回目の計算時間");
+const result1 = memoizedSquareSum(testArray);
+console.timeEnd("1回目の計算時間");
+console.log(`結果: ${result1}`);
+
+console.log("\n2回目の呼び出し（キャッシュから結果が取得される）:");
+console.time("2回目の計算時間");
+const result2 = memoizedSquareSum(testArray);
+console.timeEnd("2回目の計算時間");
+console.log(`結果: ${result2}`);
+
+console.log("\n異なる入力での呼び出し（新たに計算処理が実行される）:");
+console.time("異なる入力の計算時間");
+const result3 = memoizedSquareSum([2, 3, 4, 5, 6]);
+console.timeEnd("異なる入力の計算時間");
+console.log(`結果: ${result3}`);
+
 // 状態管理におけるメモ化の例
 // これは、ReduxやNgRxのセレクタ関数に相当するものです
 const expensiveCalculation = (state) => {
