@@ -15,7 +15,7 @@ import { AppState } from '../reducers';
  */
 
 // Todoの状態を選択するセレクター
-export const selectTodoState = createFeatureSelector<AppState, fromTodo.TodoState>('todos');
+export const selectTodoState = createFeatureSelector<fromTodo.TodoState>('todos');
 
 /**
  * メタデータセレクター
