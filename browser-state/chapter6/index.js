@@ -61,46 +61,52 @@ function renderVirtualDOM(state) {
 }
 
 // 2つの仮想DOMツリーの差分を計算する関数
-// この関数は、変更された部分だけを特定するために使用されます
+// 簡単に言うと「前の設計図と新しい設計図を比べて、変わった部分を見つける」機能です
 function diff(oldVTree, newVTree) {
-  const patches = []; // 変更点を格納する配列
+  // 変更点を記録するリスト（「ここが変わりました」というメモのようなもの）
+  const patches = []; 
 
-  // 引数のチェック
+  // まず、比較する2つの設計図（oldVTreeとnewVTree）が正しく渡されているか確認
+  // もし片方でも設計図がなければ、何も変更点はないと判断
   if (!oldVTree || !newVTree) {
-    console.log("警告: 無効な仮想DOMツリーが渡されました");
+    console.log("警告: 比較する設計図（仮想DOM）が見つかりません");
     return patches;
   }
 
-  // oldVTreeまたはnewVTreeにchildrenプロパティがない場合は空配列を設定
+  // 設計図に子要素の情報がない場合は、空の配列を用意しておく
+  // これは「子供部屋がない家」の場合でも比較できるようにするための準備
   oldVTree.children = oldVTree.children || [];
   newVTree.children = newVTree.children || [];
 
-  // 型が変わった場合は完全に置き換え
-  // （例: divからspanに変更された場合）
+  // 要素の種類が変わった場合（例：divからspanに変更された場合）
+  // 例えるなら「和室が洋室に変わった」場合は、完全に作り直す必要がある
   if (oldVTree.type !== newVTree.type) {
     patches.push({ type: "REPLACE", newVTree });
     return patches;
   }
 
-  // プロパティの変更を検出
-  // （例: classやstyleが変更された場合）
+  // 要素の属性（class, style, idなど）が変わったかチェック
+  // 例えるなら「同じ部屋でも、壁紙や床材が変わった」場合
   if (JSON.stringify(oldVTree.props) !== JSON.stringify(newVTree.props)) {
     patches.push({ type: "PROPS", props: newVTree.props });
   }
 
-  // 子要素の変更を再帰的に検出
+  // 子要素の変更をチェック（部屋の中の家具や小物が変わったか）
+  // まずは、古い設計図と新しい設計図の両方にある子要素の数を確認
   const minLength = Math.min(
     oldVTree.children.length,
     newVTree.children.length
   );
 
+  // 両方の設計図にある子要素を一つずつ比較していく
   for (let i = 0; i < minLength; i++) {
-    // 子要素がプリミティブ型（文字列など）の場合
+    // 子要素がテキスト（文字列）の場合
+    // 例えば「こんにちは」というテキストが「さようなら」に変わったかどうか
     if (
       typeof oldVTree.children[i] !== "object" ||
       typeof newVTree.children[i] !== "object"
     ) {
-      // テキストノードの内容が変更された場合
+      // テキストの内容が変わっていたら記録
       if (oldVTree.children[i] !== newVTree.children[i]) {
         patches.push({
           type: "TEXT_CHANGE",
@@ -109,7 +115,9 @@ function diff(oldVTree, newVTree) {
         });
       }
     } else {
-      // 子要素がオブジェクト（VNode）の場合は再帰的に比較
+      // 子要素が単なるテキストではなく、さらに複雑な要素（VNode）の場合
+      // 例えるなら「部屋の中にさらに小部屋がある」ような入れ子構造の場合
+      // その小部屋の中も再帰的に（繰り返し）チェックする
       const childPatches = diff(oldVTree.children[i], newVTree.children[i]);
       if (childPatches.length > 0) {
         patches.push({ type: "CHILD", index: i, patches: childPatches });
@@ -117,21 +125,24 @@ function diff(oldVTree, newVTree) {
     }
   }
 
-  // 子要素の追加または削除
+  // 子要素の数が変わった場合の処理
   if (oldVTree.children.length > newVTree.children.length) {
-    // 子要素が削除された場合
+    // 子要素が減った場合（例：3つの部屋が2つになった）
+    // 余分な部屋を取り壊す指示を記録
     patches.push({
       type: "REMOVE_CHILDREN",
       startIndex: newVTree.children.length,
     });
   } else if (newVTree.children.length > oldVTree.children.length) {
-    // 子要素が追加された場合
+    // 子要素が増えた場合（例：2つの部屋が3つになった）
+    // 新しい部屋を追加する指示を記録
     patches.push({
       type: "ADD_CHILDREN",
       children: newVTree.children.slice(oldVTree.children.length),
     });
   }
 
+  // すべての変更点をまとめて返す
   return patches;
 }
 
