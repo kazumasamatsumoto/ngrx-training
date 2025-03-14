@@ -7,14 +7,12 @@
   - **V8**：JavaScript の実行エンジン。
     - **V8 エンジン**は、Google Chrome、Chromium ベースの Microsoft Edge、Opera などで利用され、ウェブページ上の JavaScript コード（Angular や他のフレームワーク、ライブラリを含む）を高速に実行します。
     - また、Node.js でも採用され、サーバーサイドの JavaScript 実行環境としても広く利用されています。
-      > citeturn0search14
 
 - **レンダリングパイプラインの流れ**
   1. **HTML/CSS のパース**：HTML は字句解析と構文解析を経て DOM ツリー、CSS は CSSOM を生成
   2. **レンダーツリーの構築**：DOM と CSSOM を組み合わせ、表示に必要なレンダーツリーを作成
   3. **レイアウト計算**：変更があった部分のみ局所的に再計算（再フロー）
   4. **ペイントとコンポジット**：変更された部分だけ再描画し、GPU による高速合成で最終表示
-     > citeturn0search8
 
 ---
 
@@ -24,7 +22,6 @@
   Angular は仮想 DOM を使わず、コンポーネント単位での状態変化を検知し、必要な箇所だけ実際の DOM に直接変更を適用します。
 
   - これにより、Zone.js や最新の Signals などを用いて、変更があったコンポーネントのみ効率的に更新できます。
-    > citeturn0search19
 
 - **状態管理の手法**
 
@@ -44,7 +41,6 @@
   - **主な用途**：
     - **ブラウザ上での JavaScript 実行**：Google Chrome、Chromium ベースの Edge や Opera など、ユーザーのブラウザ内で Angular や他のフレームワークが生成する JavaScript コードを実行。
     - **サーバーサイド実行**：Node.js の中核として、サーバー上で JavaScript アプリケーションを動作させるために利用される。
-      > citeturn0search14
 
 - **Angular アプリと V8**  
   Angular で書かれたコード（TypeScript で記述されコンパイルされた JavaScript）は、V8 によって実行されます。
