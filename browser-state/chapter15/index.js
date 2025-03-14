@@ -1,311 +1,592 @@
 /**
- * 第15章: Reduxパターンによる状態管理
+ * 第15章: NgRxによる状態管理
  *
- * このファイルでは、Reduxライブラリを模倣した状態管理パターンを実装しています。
- * Reduxは予測可能な状態コンテナであり、アプリケーション全体の状態を単一のストアで管理します。
+ * このファイルでは、NgRxライブラリを模倣した状態管理パターンを実装しています。
+ * NgRxはAngularアプリケーション向けのリアクティブな状態管理ライブラリであり、
+ * ReduxパターンとRxJSを組み合わせたものです。
  *
- * Reduxの主要な概念:
- * 1. ストア (Store) - アプリケーションの状態を保持する単一のオブジェクト
+ * NgRxの主要な概念:
+ * 1. ストア (Store) - アプリケーションの状態を保持するRxJSのBehaviorSubject
  * 2. アクション (Action) - 状態変更を記述するプレーンなオブジェクト
  * 3. リデューサー (Reducer) - 現在の状態とアクションから新しい状態を計算する純粋関数
- * 4. ディスパッチ (Dispatch) - アクションをストアに送信する関数
- * 5. サブスクライブ (Subscribe) - 状態変更を監視する仕組み
+ * 4. セレクター (Selector) - 状態の特定の部分を取得するための関数
+ * 5. エフェクト (Effect) - 副作用（APIリクエストなど）を処理するためのサービス
+ * 6. ファサード (Facade) - コンポーネントとストアの間の抽象化レイヤー
  *
- * Reduxの3原則:
- * - 単一の信頼できる情報源 (Single source of truth) - アプリケーションの状態は単一のストアに格納
- * - 状態は読み取り専用 (State is read-only) - 状態を変更する唯一の方法はアクションをディスパッチすること
- * - 変更は純粋関数で行う (Changes are made with pure functions) - リデューサーは純粋関数であること
+ * NgRxの特徴:
+ * - リアクティブ - RxJSを使用した非同期処理と状態管理
+ * - イミュータブル - 状態は直接変更されず、新しい状態オブジェクトが生成される
+ * - 予測可能 - 単一方向のデータフローと純粋関数による状態変更
+ * - 開発ツール - Redux DevToolsとの統合による強力なデバッグ機能
  *
- * このファイルでは、Reduxの基本的な実装と、React-Reduxの`connect`関数の簡易版も示しています。
+ * このファイルでは、NgRxの基本的な実装と、コンポーネントとの連携方法を示しています。
  *
- * なぜReduxパターンが重要なのか？
+ * なぜNgRxが重要なのか？
  *
  * 【複雑な状態管理の簡素化】
- * 大規模なアプリケーションでは、状態管理が非常に複雑になります。多くのコンポーネントが
- * 同じ状態にアクセスし、更新する必要がある場合、コンポーネントベースの状態管理だけでは
- * 対応が難しくなります。Reduxは、アプリケーション全体の状態を単一のストアで管理することで、
+ * 大規模なAngularアプリケーションでは、状態管理が非常に複雑になります。多くのコンポーネントが
+ * 同じ状態にアクセスし、更新する必要がある場合、コンポーネントベースの状態管理やサービスだけでは
+ * 対応が難しくなります。NgRxは、アプリケーション全体の状態を単一のストアで管理することで、
  * この複雑さを軽減します。
  *
- * 【予測可能性と一貫性】
- * Reduxの厳格なデータフローと純粋関数によるリデューサーは、状態変更を予測可能で
- * 一貫性のあるものにします。これにより、バグの発生を減らし、デバッグを容易にします。
- * 特に、「いつ、どのように、なぜ状態が変更されたのか」を追跡しやすくなります。
+ * 【リアクティブプログラミングとの統合】
+ * NgRxはRxJSを基盤としており、Angularのリアクティブな特性と自然に統合されます。
+ * これにより、非同期処理や複雑なデータフローを宣言的に記述できます。
+ * Observableベースの状態管理により、変更の検出と伝播が効率的に行われます。
  *
- * 【時間旅行デバッギング】
- * Reduxの不変性と明示的なアクションにより、状態の変更履歴を記録できます。
- * これにより、アプリケーションの状態を過去の任意の時点に戻す「時間旅行デバッギング」が
- * 可能になります。これは複雑なバグを特定する際に非常に強力なツールです。
- *
- * 【ミドルウェアによる拡張性】
- * Reduxのミドルウェア機能により、非同期処理、ログ記録、クラッシュレポートなどの
- * 機能を簡単に追加できます。これにより、アプリケーションの機能を段階的に拡張しながらも、
- * コアのデータフローを単純に保つことができます。
+ * 【開発者体験の向上】
+ * NgRxは、Redux DevToolsとの統合により、状態の変化を時系列で追跡し、デバッグする
+ * 強力なツールを提供します。これにより、「時間旅行デバッギング」が可能になり、
+ * 複雑なバグの特定と修正が容易になります。
  *
  * 【テスト容易性】
- * Reduxのアーキテクチャは、テストを書きやすくします。リデューサーは純粋関数なので、
- * 入力と出力をテストするだけで済みます。また、アクションクリエイターやミドルウェアも
- * 独立してテストできます。
+ * NgRxのアーキテクチャは、テストを書きやすくします。リデューサーは純粋関数なので、
+ * 入力と出力をテストするだけで済みます。エフェクトもRxJSのテスト機能を使用して
+ * 効果的にテストできます。また、ファサードパターンを使用することで、
+ * コンポーネントのテストも簡素化されます。
  *
- * 【開発ツールとエコシステム】
- * Reduxには豊富な開発ツールとエコシステムがあります。Redux DevToolsを使用すると、
- * 状態の変化をリアルタイムで監視し、デバッグできます。また、多くのミドルウェアや
- * ユーティリティライブラリが利用可能で、開発効率を向上させます。
+ * 【スケーラビリティと保守性】
+ * NgRxは、アプリケーションの成長に合わせてスケールするように設計されています。
+ * 機能モジュールごとに状態を分割し、必要に応じて結合することができます。
+ * また、明確な構造とパターンにより、新しい開発者がプロジェクトに参加しやすくなります。
+ *
+ * 【副作用の管理】
+ * NgRxのエフェクトは、APIリクエスト、WebSocketの通信、ローカルストレージの操作などの
+ * 副作用を宣言的に管理するための強力な仕組みを提供します。これにより、
+ * ビジネスロジックとUI層を明確に分離できます。
  */
 
-// Reduxを使用した例（実際のReduxは使用していません）
+// NgRxを使用した例（実際のNgRxは使用していません）
 
 /**
- * Reduxストアを作成する関数
- * ストアはアプリケーションの状態を保持し、状態の更新と購読の仕組みを提供します
- *
- * @param {Function} reducer - 状態とアクションから新しい状態を計算する関数
- * @param {Object} initialState - ストアの初期状態
- * @returns {Object} - getState, dispatch, subscribeメソッドを持つストアオブジェクト
+ * アクションの定義
+ * NgRxでは、アクションはTypeScriptのクラスとして定義されることが多い
  */
-function createStore(reducer, initialState) {
-  let state = initialState;
-  const listeners = [];
-
-  /**
-   * 現在の状態を取得する関数
-   * @returns {Object} - 現在の状態
-   */
-  function getState() {
-    return state;
+class Action {
+  constructor(type, payload = null) {
+    this.type = type;
+    if (payload !== null) {
+      this.payload = payload;
+    }
   }
-
-  /**
-   * アクションをディスパッチして状態を更新する関数
-   * リデューサーを呼び出して新しい状態を計算し、すべてのリスナーに通知します
-   *
-   * @param {Object} action - タイプとオプションのペイロードを持つアクションオブジェクト
-   * @returns {Object} - ディスパッチされたアクション
-   */
-  function dispatch(action) {
-    state = reducer(state, action);
-    listeners.forEach((listener) => listener(state));
-    return action;
-  }
-
-  /**
-   * 状態変更を購読する関数
-   * 状態が変更されるたびに呼び出されるリスナー関数を登録します
-   *
-   * @param {Function} listener - 状態変更時に呼び出される関数
-   * @returns {Function} - 購読を解除するための関数
-   */
-  function subscribe(listener) {
-    listeners.push(listener);
-    return function unsubscribe() {
-      const index = listeners.indexOf(listener);
-      if (index !== -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  }
-
-  // 初期状態を設定
-  dispatch({ type: "@@INIT" });
-
-  return { getState, dispatch, subscribe };
 }
 
-// アクションタイプ - アクションを識別するための定数
-const INCREMENT = "INCREMENT";
-const DECREMENT = "DECREMENT";
-const ADD = "ADD";
-const RESET = "RESET";
+// アクションタイプの定義
+const ActionTypes = {
+  INCREMENT: "[Counter] Increment",
+  DECREMENT: "[Counter] Decrement",
+  ADD: "[Counter] Add",
+  RESET: "[Counter] Reset",
+  LOAD_TODOS: "[Todo] Load Todos",
+  LOAD_TODOS_SUCCESS: "[Todo] Load Todos Success",
+  LOAD_TODOS_FAILURE: "[Todo] Load Todos Failure",
+  ADD_TODO: "[Todo] Add Todo",
+  TOGGLE_TODO: "[Todo] Toggle Todo",
+  REMOVE_TODO: "[Todo] Remove Todo",
+};
 
 /**
- * アクションクリエイター - アクションオブジェクトを作成する関数
- * アクションの作成を抽象化し、再利用性を高めます
+ * アクションクリエイター
+ * アクションオブジェクトを作成する関数
  */
-const increment = () => ({ type: INCREMENT });
-const decrement = () => ({ type: DECREMENT });
-const add = (amount) => ({ type: ADD, payload: amount });
-const reset = () => ({ type: RESET });
+const CounterActions = {
+  increment: () => new Action(ActionTypes.INCREMENT),
+  decrement: () => new Action(ActionTypes.DECREMENT),
+  add: (amount) => new Action(ActionTypes.ADD, amount),
+  reset: () => new Action(ActionTypes.RESET),
+};
+
+const TodoActions = {
+  loadTodos: () => new Action(ActionTypes.LOAD_TODOS),
+  loadTodosSuccess: (todos) =>
+    new Action(ActionTypes.LOAD_TODOS_SUCCESS, todos),
+  loadTodosFailure: (error) =>
+    new Action(ActionTypes.LOAD_TODOS_FAILURE, error),
+  addTodo: (text) => new Action(ActionTypes.ADD_TODO, text),
+  toggleTodo: (id) => new Action(ActionTypes.TOGGLE_TODO, id),
+  removeTodo: (id) => new Action(ActionTypes.REMOVE_TODO, id),
+};
 
 /**
- * カウンターリデューサー - 状態とアクションから新しい状態を計算する純粋関数
- *
- * @param {Object} state - 現在の状態、デフォルト値は { count: 0 }
- * @param {Object} action - ディスパッチされたアクション
- * @returns {Object} - 新しい状態
+ * 状態インターフェース
+ * TypeScriptでは通常、状態の型を定義する
  */
-const counterReducer = (state = { count: 0 }, action) => {
+// interface AppState {
+//   counter: CounterState;
+//   todos: TodoState;
+// }
+
+// interface CounterState {
+//   count: number;
+// }
+
+// interface TodoState {
+//   todos: Todo[];
+//   loading: boolean;
+//   error: any;
+// }
+
+// interface Todo {
+//   id: number;
+//   text: string;
+//   completed: boolean;
+// }
+
+/**
+ * 初期状態
+ */
+const initialCounterState = {
+  count: 0,
+};
+
+const initialTodoState = {
+  todos: [],
+  loading: false,
+  error: null,
+};
+
+const initialAppState = {
+  counter: initialCounterState,
+  todos: initialTodoState,
+};
+
+/**
+ * リデューサー
+ * 現在の状態とアクションから新しい状態を計算する純粋関数
+ */
+function counterReducer(state = initialCounterState, action) {
   switch (action.type) {
-    case INCREMENT:
+    case ActionTypes.INCREMENT:
       return { ...state, count: state.count + 1 };
-    case DECREMENT:
+    case ActionTypes.DECREMENT:
       return { ...state, count: state.count - 1 };
-    case ADD:
+    case ActionTypes.ADD:
       return { ...state, count: state.count + action.payload };
-    case RESET:
-      return { count: 0 };
+    case ActionTypes.RESET:
+      return { ...initialCounterState };
     default:
       return state;
   }
+}
+
+function todoReducer(state = initialTodoState, action) {
+  switch (action.type) {
+    case ActionTypes.LOAD_TODOS:
+      return { ...state, loading: true };
+    case ActionTypes.LOAD_TODOS_SUCCESS:
+      return { ...state, loading: false, todos: action.payload };
+    case ActionTypes.LOAD_TODOS_FAILURE:
+      return { ...state, loading: false, error: action.payload };
+    case ActionTypes.ADD_TODO:
+      const newTodo = {
+        id: Date.now(),
+        text: action.payload,
+        completed: false,
+      };
+      return { ...state, todos: [...state.todos, newTodo] };
+    case ActionTypes.TOGGLE_TODO:
+      const updatedTodos = state.todos.map((todo) =>
+        todo.id === action.payload
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      );
+      return { ...state, todos: updatedTodos };
+    case ActionTypes.REMOVE_TODO:
+      const filteredTodos = state.todos.filter(
+        (todo) => todo.id !== action.payload
+      );
+      return { ...state, todos: filteredTodos };
+    default:
+      return state;
+  }
+}
+
+/**
+ * メタリデューサー
+ * 複数のリデューサーを組み合わせる関数
+ */
+function combineReducers(reducers) {
+  return function (state = {}, action) {
+    const nextState = {};
+    let hasChanged = false;
+
+    for (const key in reducers) {
+      const reducer = reducers[key];
+      const previousStateForKey = state[key];
+      const nextStateForKey = reducer(previousStateForKey, action);
+      nextState[key] = nextStateForKey;
+      hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+    }
+
+    return hasChanged ? nextState : state;
+  };
+}
+
+// ルートリデューサー
+const rootReducer = combineReducers({
+  counter: counterReducer,
+  todos: todoReducer,
+});
+
+/**
+ * BehaviorSubjectの簡易実装
+ * NgRxのStoreはRxJSのBehaviorSubjectをベースにしている
+ */
+class BehaviorSubject {
+  constructor(initialValue) {
+    this.value = initialValue;
+    this.observers = [];
+  }
+
+  getValue() {
+    return this.value;
+  }
+
+  next(value) {
+    this.value = value;
+    this.observers.forEach((observer) => observer(value));
+  }
+
+  subscribe(observer) {
+    this.observers.push(observer);
+    observer(this.value);
+
+    return () => {
+      const index = this.observers.indexOf(observer);
+      if (index !== -1) {
+        this.observers.splice(index, 1);
+      }
+    };
+  }
+}
+
+/**
+ * NgRxストアの簡易実装
+ */
+class Store extends BehaviorSubject {
+  constructor(reducer, initialState) {
+    super(initialState);
+    this.reducer = reducer;
+  }
+
+  dispatch(action) {
+    const currentState = this.getValue();
+    const nextState = this.reducer(currentState, action);
+    this.next(nextState);
+    return action;
+  }
+
+  select(selectorFn) {
+    const source$ = new BehaviorSubject(selectorFn(this.getValue()));
+
+    this.subscribe((state) => {
+      source$.next(selectorFn(state));
+    });
+
+    return source$;
+  }
+}
+
+// ストアの作成
+const store = new Store(rootReducer, initialAppState);
+
+/**
+ * セレクター
+ * 状態の特定の部分を取得するための関数
+ */
+const Selectors = {
+  selectCount: (state) => state.counter.count,
+  selectTodos: (state) => state.todos.todos,
+  selectLoading: (state) => state.todos.loading,
+  selectError: (state) => state.todos.error,
+  selectCompletedTodos: (state) =>
+    state.todos.todos.filter((todo) => todo.completed),
+  selectIncompleteTodos: (state) =>
+    state.todos.todos.filter((todo) => !todo.completed),
 };
 
-// ストアを作成 - アプリケーションの状態を保持するオブジェクト
-const store = createStore(counterReducer, { count: 0 });
-
 /**
- * UIを更新する関数 - ストアの状態変更に応じてUIを更新
- * 実際のアプリケーションではDOMを直接操作するか、
- * Reactなどのライブラリを使用してUIを更新します
+ * エフェクトの簡易実装
+ * 実際のNgRxでは、@Effectデコレータを使用する
  */
-function render() {
-  const state = store.getState();
-  console.log(`UIを更新: カウント = ${state.count}`);
+class TodoEffects {
+  constructor(actions$, todoService, store) {
+    this.actions$ = actions$;
+    this.todoService = todoService;
+    this.store = store;
 
-  // 実際のアプリケーションでは、ここでDOM要素を更新する
-  // document.getElementById('counter').textContent = state.count;
-}
+    // エフェクトの初期化
+    this.initEffects();
+  }
 
-// ストアをサブスクライブ - 状態変更時にrender関数を呼び出す
-store.subscribe(render);
-
-// 初期レンダリング
-render();
-
-/**
- * イベントハンドラー - ユーザー操作に応じてアクションをディスパッチ
- * 実際のアプリケーションではボタンのクリックイベントなどに紐づけます
- */
-function handleIncrement() {
-  store.dispatch(increment());
-}
-
-function handleDecrement() {
-  store.dispatch(decrement());
-}
-
-function handleAdd(amount) {
-  store.dispatch(add(amount));
-}
-
-function handleReset() {
-  store.dispatch(reset());
-}
-
-// ボタンクリックをシミュレート
-console.log("\n--- ボタンクリックをシミュレート ---");
-console.log("増加ボタンをクリック");
-handleIncrement();
-
-console.log("\n増加ボタンをクリック");
-handleIncrement();
-
-console.log("\n5追加ボタンをクリック");
-handleAdd(5);
-
-console.log("\n減少ボタンをクリック");
-handleDecrement();
-
-console.log("\nリセットボタンをクリック");
-handleReset();
-
-/**
- * React-Reduxの connect 関数の簡易版
- * コンポーネントをReduxストアに接続するための高階関数
- *
- * @param {Function} mapStateToProps - ストアの状態をコンポーネントのプロパティにマッピングする関数
- * @param {Function} mapDispatchToProps - ディスパッチ関数をコンポーネントのプロパティにマッピングする関数
- * @returns {Function} - コンポーネントをラップする関数
- */
-function connect(mapStateToProps, mapDispatchToProps) {
-  return function (Component) {
-    return function (ownProps) {
-      // ストアから状態を取得
-      const state = store.getState();
-
-      // 状態をプロパティにマッピング
-      const stateProps = mapStateToProps(state);
-
-      // ディスパッチ関数をプロパティにマッピング
-      const dispatchProps = mapDispatchToProps(store.dispatch);
-
-      // コンポーネントにプロパティを渡す
-      return Component({
-        ...ownProps,
-        ...stateProps,
-        ...dispatchProps,
-      });
-    };
-  };
+  initEffects() {
+    // loadTodosエフェクト
+    this.actions$.subscribe((action) => {
+      if (action.type === ActionTypes.LOAD_TODOS) {
+        // APIリクエストをシミュレート
+        console.log("エフェクト: TODOの読み込みを開始");
+        setTimeout(() => {
+          try {
+            const todos = [
+              { id: 1, text: "NgRxを学ぶ", completed: false },
+              { id: 2, text: "Angularアプリを作成する", completed: true },
+            ];
+            this.store.dispatch(TodoActions.loadTodosSuccess(todos));
+          } catch (error) {
+            this.store.dispatch(TodoActions.loadTodosFailure(error));
+          }
+        }, 1000);
+      }
+    });
+  }
 }
 
 /**
- * Counterコンポーネント - 仮想DOMを返す関数コンポーネント
- * 実際のReactではJSXを使用します
- *
- * @param {Object} props - コンポーネントのプロパティ
- * @returns {Object} - 仮想DOMの表現
+ * アクションストリームの簡易実装
  */
-function Counter(props) {
-  return {
-    type: "div",
-    props: { className: "counter" },
-    children: [
-      {
-        type: "h2",
-        props: {},
-        children: [`カウント: ${props.count}`],
-      },
-      {
-        type: "div",
-        props: { className: "buttons" },
-        children: [
-          {
-            type: "button",
-            props: { onClick: props.increment },
-            children: ["増加"],
-          },
-          {
-            type: "button",
-            props: { onClick: props.decrement },
-            children: ["減少"],
-          },
-          {
-            type: "button",
-            props: { onClick: props.reset },
-            children: ["リセット"],
-          },
-        ],
-      },
-    ],
-  };
+class Actions extends BehaviorSubject {
+  constructor() {
+    super({ type: "@@INIT" });
+  }
+
+  // 特定のアクションタイプをフィルタリングするメソッド
+  ofType(actionType) {
+    const source$ = new BehaviorSubject(null);
+
+    this.subscribe((action) => {
+      if (action.type === actionType) {
+        source$.next(action);
+      }
+    });
+
+    return source$;
+  }
 }
 
-/**
- * 状態をプロパティにマッピングする関数
- * ストアの状態からコンポーネントに必要なプロパティを抽出します
- *
- * @param {Object} state - ストアの状態
- * @returns {Object} - コンポーネントに渡すプロパティ
- */
-const mapStateToProps = (state) => ({
-  count: state.count,
-});
+// アクションストリームの作成
+const actions$ = new Actions();
+
+// ストアのディスパッチをオーバーライドして、アクションストリームに通知
+const originalDispatch = store.dispatch;
+store.dispatch = function (action) {
+  const result = originalDispatch.call(store, action);
+  actions$.next(action);
+  return result;
+};
 
 /**
- * ディスパッチ関数をプロパティにマッピングする関数
- * アクションをディスパッチする関数をコンポーネントのプロパティとして提供します
- *
- * @param {Function} dispatch - ストアのディスパッチ関数
- * @returns {Object} - コンポーネントに渡すアクションディスパッチャー
+ * 模擬的なTodoサービス
  */
-const mapDispatchToProps = (dispatch) => ({
-  increment: () => dispatch(increment()),
-  decrement: () => dispatch(decrement()),
-  reset: () => dispatch(reset()),
-});
+class TodoService {
+  getTodos() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve([
+          { id: 1, text: "NgRxを学ぶ", completed: false },
+          { id: 2, text: "Angularアプリを作成する", completed: true },
+        ]);
+      }, 1000);
+    });
+  }
+}
 
-// Counterコンポーネントをストアに接続
-const ConnectedCounter = connect(mapStateToProps, mapDispatchToProps)(Counter);
+// サービスとエフェクトの初期化
+const todoService = new TodoService();
+const todoEffects = new TodoEffects(actions$, todoService, store);
 
-// 接続されたコンポーネントをレンダリング
-console.log("\n--- 接続されたコンポーネント ---");
-const counterElement = ConnectedCounter({});
-console.log(JSON.stringify(counterElement, null, 2));
+/**
+ * ファサードパターンの実装
+ * コンポーネントとストアの間の抽象化レイヤー
+ */
+class CounterFacade {
+  constructor(store) {
+    this.store = store;
+    this.count$ = store.select(Selectors.selectCount);
+  }
+
+  increment() {
+    this.store.dispatch(CounterActions.increment());
+  }
+
+  decrement() {
+    this.store.dispatch(CounterActions.decrement());
+  }
+
+  add(amount) {
+    this.store.dispatch(CounterActions.add(amount));
+  }
+
+  reset() {
+    this.store.dispatch(CounterActions.reset());
+  }
+}
+
+class TodoFacade {
+  constructor(store) {
+    this.store = store;
+    this.todos$ = store.select(Selectors.selectTodos);
+    this.loading$ = store.select(Selectors.selectLoading);
+    this.error$ = store.select(Selectors.selectError);
+    this.completedTodos$ = store.select(Selectors.selectCompletedTodos);
+    this.incompleteTodos$ = store.select(Selectors.selectIncompleteTodos);
+  }
+
+  loadTodos() {
+    this.store.dispatch(TodoActions.loadTodos());
+  }
+
+  addTodo(text) {
+    this.store.dispatch(TodoActions.addTodo(text));
+  }
+
+  toggleTodo(id) {
+    this.store.dispatch(TodoActions.toggleTodo(id));
+  }
+
+  removeTodo(id) {
+    this.store.dispatch(TodoActions.removeTodo(id));
+  }
+}
+
+// ファサードの作成
+const counterFacade = new CounterFacade(store);
+const todoFacade = new TodoFacade(store);
+
+/**
+ * Angularコンポーネントの模擬実装
+ */
+class CounterComponent {
+  constructor(counterFacade) {
+    this.counterFacade = counterFacade;
+    this.count = 0;
+
+    // 状態の購読
+    this.subscription = this.counterFacade.count$.subscribe((count) => {
+      this.count = count;
+      this.render();
+    });
+  }
+
+  // UIイベントハンドラー
+  increment() {
+    this.counterFacade.increment();
+  }
+
+  decrement() {
+    this.counterFacade.decrement();
+  }
+
+  reset() {
+    this.counterFacade.reset();
+  }
+
+  // UIの更新
+  render() {
+    console.log(`カウンターコンポーネント: カウント = ${this.count}`);
+  }
+
+  // コンポーネントの破棄
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription();
+    }
+  }
+}
+
+class TodoListComponent {
+  constructor(todoFacade) {
+    this.todoFacade = todoFacade;
+    this.todos = [];
+    this.loading = false;
+    this.error = null;
+    this.newTodo = "";
+
+    // 状態の購読
+    this.todosSubscription = this.todoFacade.todos$.subscribe((todos) => {
+      this.todos = todos;
+      this.render();
+    });
+
+    this.loadingSubscription = this.todoFacade.loading$.subscribe((loading) => {
+      this.loading = loading;
+      this.render();
+    });
+
+    this.errorSubscription = this.todoFacade.error$.subscribe((error) => {
+      this.error = error;
+      if (error) {
+        console.error("エラー:", error);
+      }
+    });
+  }
+
+  // ライフサイクルフック
+  ngOnInit() {
+    this.todoFacade.loadTodos();
+  }
+
+  // UIイベントハンドラー
+  addTodo() {
+    if (this.newTodo.trim() === "") return;
+    this.todoFacade.addTodo(this.newTodo);
+    this.newTodo = "";
+  }
+
+  toggleTodo(id) {
+    this.todoFacade.toggleTodo(id);
+  }
+
+  removeTodo(id) {
+    this.todoFacade.removeTodo(id);
+  }
+
+  // UIの更新
+  render() {
+    console.log(`TODOリストコンポーネント: 読み込み中 = ${this.loading}`);
+    if (!this.loading) {
+      console.log("TODOリスト:", this.todos);
+    }
+  }
+
+  // コンポーネントの破棄
+  ngOnDestroy() {
+    if (this.todosSubscription) this.todosSubscription();
+    if (this.loadingSubscription) this.loadingSubscription();
+    if (this.errorSubscription) this.errorSubscription();
+  }
+}
+
+// コンポーネントの作成と使用
+console.log("--- NgRxを使用したカウンターコンポーネント ---");
+const counterComponent = new CounterComponent(counterFacade);
+
+console.log("\n--- カウンターの操作 ---");
+counterComponent.increment();
+counterComponent.increment();
+counterComponent.decrement();
+counterComponent.reset();
+
+console.log("\n--- NgRxを使用したTODOリストコンポーネント ---");
+const todoListComponent = new TodoListComponent(todoFacade);
+
+// ngOnInitを手動で呼び出し
+todoListComponent.ngOnInit();
+
+// 非同期処理の完了を待つ
+setTimeout(() => {
+  console.log("\n--- TODOの操作 ---");
+  todoListComponent.addTodo("Angularのテストを書く");
+  todoListComponent.toggleTodo(1);
+
+  // 状態の最終確認
+  console.log("\n--- 最終状態 ---");
+  console.log(
+    "カウンター状態:",
+    store.select(Selectors.selectCount).getValue()
+  );
+  console.log("TODO状態:", store.select(Selectors.selectTodos).getValue());
+
+  // コンポーネントの破棄
+  counterComponent.ngOnDestroy();
+  todoListComponent.ngOnDestroy();
+}, 2000);
