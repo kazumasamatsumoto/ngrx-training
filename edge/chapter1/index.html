@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chapter 1: ブラウザのメモリ管理の基本</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+      }
+      .container {
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .memory-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .memory-item {
+        background-color: white;
+        padding: 15px;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      .memory-item h3 {
+        margin-top: 0;
+        color: #3498db;
+      }
+      .memory-value {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #2980b9;
+      }
+      .memory-bar-container {
+        height: 30px;
+        background-color: #ecf0f1;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .memory-bar {
+        height: 100%;
+        background-color: #3498db;
+        width: 0%;
+        transition: width 0.5s ease-in-out;
+      }
+      .log-container {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 4px;
+        height: 200px;
+        overflow-y: auto;
+        font-family: monospace;
+      }
+      .log-entry {
+        margin: 5px 0;
+        border-bottom: 1px solid #34495e;
+        padding-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chapter 1: ブラウザのメモリ管理の基本</h1>
+
+    <div class="container">
+      <h2>メモリ使用状況</h2>
+
+      <div class="memory-bar-container">
+        <div id="memoryBarDisplay" class="memory-bar"></div>
+      </div>
+
+      <div class="memory-info">
+        <div class="memory-item">
+          <h3>総JSヒープサイズ</h3>
+          <div id="totalHeapSize" class="memory-value">計測中...</div>
+        </div>
+        <div class="memory-item">
+          <h3>使用中のJSヒープサイズ</h3>
+          <div id="usedHeapSize" class="memory-value">計測中...</div>
+        </div>
+        <div class="memory-item">
+          <h3>JSヒープサイズ上限</h3>
+          <div id="heapSizeLimit" class="memory-value">計測中...</div>
+        </div>
+        <div class="memory-item">
+          <h3>使用率</h3>
+          <div id="memoryUsage" class="memory-value">計測中...</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="startMonitoring">メモリ監視開始</button>
+        <button id="stopMonitoring">メモリ監視停止</button>
+        <button id="createObject">10MBオブジェクト作成</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>メモリ監視ログ</h2>
+      <div id="memoryLog" class="log-container">
+        <!-- ログエントリがここに追加されます -->
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>使い方</h2>
+      <p>
+        このページでは、ブラウザのメモリ使用状況をリアルタイムで監視できます。
+      </p>
+      <ul>
+        <li>
+          <strong>メモリ監視開始</strong>: 1秒ごとにメモリ使用状況を更新します
+        </li>
+        <li><strong>メモリ監視停止</strong>: メモリ監視を停止します</li>
+        <li>
+          <strong>10MBオブジェクト作成</strong>:
+          10MBのオブジェクトを作成してメモリ使用量の変化を確認します
+        </li>
+      </ul>
+      <p>
+        注意:
+        <code>performance.memory</code>
+        APIはChromiumベースのブラウザ（Chrome、Edge、Opera）でのみ利用可能です。
+      </p>
+    </div>
+
+    <script>
+      // メモリログを更新する関数
+      function addLogEntry(message) {
+        const logContainer = document.getElementById("memoryLog");
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      // メモリバーを更新する関数
+      function updateMemoryBar(usedPercent) {
+        const memoryBar = document.getElementById("memoryBarDisplay");
+        if (memoryBar) {
+          memoryBar.style.width = `${Math.min(usedPercent, 100)}%`;
+
+          // 使用率に応じて色を変更
+          if (usedPercent > 80) {
+            memoryBar.style.backgroundColor = "#e74c3c"; // 赤 (危険)
+          } else if (usedPercent > 60) {
+            memoryBar.style.backgroundColor = "#f39c12"; // オレンジ (警告)
+          } else {
+            memoryBar.style.backgroundColor = "#3498db"; // 青 (正常)
+          }
+        }
+      }
+
+      // 元のupdateDOMDisplay関数を拡張
+      const originalUpdateDOMDisplay = window.updateDOMDisplay;
+      window.updateDOMDisplay = function (memoryInfo) {
+        if (typeof originalUpdateDOMDisplay === "function") {
+          originalUpdateDOMDisplay(memoryInfo);
+        }
+
+        // メモリバーを更新
+        const usagePercent =
+          (memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit) * 100;
+        updateMemoryBar(usagePercent);
+
+        // ログにエントリを追加
+        addLogEntry(
+          `メモリ使用量: ${formatBytes(
+            memoryInfo.usedJSHeapSize
+          )} (${usagePercent.toFixed(2)}%)`
+        );
+      };
+    </script>
+
+    <script src="index.js"></script>
+  </body>
+</html>

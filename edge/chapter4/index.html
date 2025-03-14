@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chapter 4: Edgeブラウザでのメモリプロファイリング</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Meiryo UI", sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #0078d4;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .memory-info {
+        background-color: #f0f8ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #d0e4f7;
+      }
+
+      .memory-bar {
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        margin: 10px 0;
+        overflow: hidden;
+      }
+
+      .memory-bar-fill {
+        height: 100%;
+        background-color: #4caf50;
+        width: 0%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+      }
+
+      .memory-metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .metric {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .metric-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #555;
+      }
+
+      .metric-value {
+        font-size: 1.2em;
+        color: #0078d4;
+      }
+
+      .control-group {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .control-group h3 {
+        margin-top: 0;
+        color: #333;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+        margin: 10px 0;
+      }
+
+      button {
+        background-color: #0078d4;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        width: 100%;
+      }
+
+      button:hover {
+        background-color: #005a9e;
+      }
+
+      button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+
+      .log-container {
+        background-color: #1e1e1e;
+        color: #dcdcdc;
+        padding: 15px;
+        border-radius: 8px;
+        height: 300px;
+        overflow-y: auto;
+        font-family: "Consolas", "Courier New", monospace;
+        margin-top: 20px;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 5px;
+      }
+
+      .instructions {
+        background-color: #fffacd;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border: 1px solid #e6e0b3;
+      }
+
+      .warning {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        border: 1px solid #ffcdd2;
+      }
+
+      .tip {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        border: 1px solid #c8e6c9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Chapter 4: Edgeブラウザでのメモリプロファイリング</h1>
+
+      <div class="memory-info">
+        <h2>メモリ使用状況</h2>
+        <div class="memory-bar">
+          <div id="memory-bar-fill" class="memory-bar-fill"></div>
+        </div>
+
+        <div class="memory-metrics">
+          <div class="metric">
+            <div class="metric-title">使用中のJSヒープサイズ</div>
+            <div id="used-heap" class="metric-value">計算中...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">合計JSヒープサイズ</div>
+            <div id="total-heap" class="metric-value">計算中...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">JSヒープサイズ上限</div>
+            <div id="heap-limit" class="metric-value">計算中...</div>
+          </div>
+          <div class="metric">
+            <div class="metric-title">メモリ使用率</div>
+            <div id="usage-percentage" class="metric-value">計算中...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>メモリ監視</h3>
+        <div class="controls">
+          <button id="start-monitoring">メモリ監視を開始</button>
+          <button id="stop-monitoring" disabled>メモリ監視を停止</button>
+          <button id="force-gc">ガベージコレクションを促す</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>DOMリークのデモ</h3>
+        <div class="tip">
+          ヒント:
+          このデモを実行した後、開発者ツールのMemoryタブでヒープスナップショットを取得し、「Detached」でフィルタリングすると切り離されたDOMノードを確認できます。
+        </div>
+        <div class="controls">
+          <button id="create-detached-nodes">
+            切り離されたDOMノードを作成
+          </button>
+          <button id="clear-detached-nodes">切り離されたDOMノードを解放</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>クロージャリークのデモ</h3>
+        <div class="warning">
+          注意:
+          このデモを長時間実行すると、メモリ使用量が増加し続ける可能性があります。
+        </div>
+        <div class="controls">
+          <button id="setup-leaky-timer">クロージャリークを作成</button>
+          <button id="clear-leaky-timers">クロージャリークを解消</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>イベントリスナーリークのデモ</h3>
+        <div class="tip">
+          ヒント: このデモを実行した後、開発者ツールのMemoryタブで「Allocation
+          instrumentation on
+          timeline」を使用すると、イベントリスナーオブジェクトの増加を確認できます。
+        </div>
+        <div class="controls">
+          <button id="add-leaky-listener">イベントリスナーリークを作成</button>
+          <button id="clear-event-listeners">イベントリスナーを解除</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>オブジェクトプールのデモ</h3>
+        <div class="controls">
+          <button id="demo-with-object-pool">オブジェクトプールを使用</button>
+          <button id="demo-without-object-pool">オブジェクトプールなし</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>WeakMapのデモ</h3>
+        <div class="tip">
+          ヒント:
+          このデモでは、通常のMapとWeakMapの違いを確認できます。WeakMapはキーへの参照が弱いため、キーオブジェクトが不要になると自動的に解放されます。
+        </div>
+        <div class="controls">
+          <button id="demo-with-weak-map">WeakMapデモを実行</button>
+          <button id="clear-weak-map-demo">WeakMapデモをクリア</button>
+        </div>
+      </div>
+
+      <div class="log-container" id="log-container">
+        <!-- ログエントリがここに追加されます -->
+      </div>
+
+      <div class="instructions">
+        <h2>使い方</h2>
+        <p>
+          このページでは、Edgeブラウザでのメモリプロファイリングを実験的に確認できます。上部のボタンをクリックして、さまざまなデモを実行してください。
+        </p>
+
+        <h3>開発者ツールの使用方法</h3>
+        <ol>
+          <li>F12キーを押して開発者ツールを開きます。</li>
+          <li>「Memory」タブを選択します。</li>
+          <li>
+            以下のいずれかのプロファイリング方法を選択します：
+            <ul>
+              <li>
+                <strong>Heap snapshot</strong>:
+                特定の時点でのメモリ使用状況を記録します。
+              </li>
+              <li>
+                <strong>Allocation instrumentation on timeline</strong>:
+                時間経過に伴うメモリ割り当ての状況を記録します。
+              </li>
+              <li>
+                <strong>Allocation sampling</strong>:
+                メモリ割り当てのサンプリングを行います。
+              </li>
+            </ul>
+          </li>
+          <li>デモを実行し、メモリ使用状況の変化を観察します。</li>
+        </ol>
+
+        <p>
+          注意:
+          メモリ情報の取得には、Chromeブラウザが必要です。他のブラウザでは一部の機能が動作しない場合があります。
+        </p>
+      </div>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
