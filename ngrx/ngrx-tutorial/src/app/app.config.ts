@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(),
     provideStore(reducers, { metaReducers }),
-    provideEffects(TodoEffects),
+    provideEffects([TodoEffects]),
     provideStoreDevtools({
       maxAge: 25,
       logOnly: !isDevMode(),

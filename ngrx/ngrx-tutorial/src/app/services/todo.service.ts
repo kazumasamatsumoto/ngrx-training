@@ -44,17 +44,23 @@ export class TodoService {
   // Todoの完了状態を切り替え
   toggleTodo(id: number): Observable<Todo> {
     // 対象のTodoを検索
-    const todo = this.todos.find(t => t.id === id);
+    const index = this.todos.findIndex(t => t.id === id);
     
-    if (!todo) {
+    if (index === -1) {
       throw new Error(`Todo with id ${id} not found`);
     }
     
-    // 完了状態を反転
-    todo.completed = !todo.completed;
+    // 完了状態を反転（不変性を保持するため、新しいオブジェクトを作成）
+    const updatedTodo = {
+      ...this.todos[index],
+      completed: !this.todos[index].completed
+    };
+    
+    // 配列内のTodoを更新
+    this.todos[index] = updatedTodo;
     
     // APIリクエストをシミュレート
-    return of({...todo}).pipe(delay(500));
+    return of(updatedTodo).pipe(delay(500));
   }
 
   // Todoを削除
