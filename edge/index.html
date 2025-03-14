@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ブラウザメモリ管理学習アプリ</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>ブラウザメモリ管理学習アプリ</h1>
+        
+        <div class="section">
+            <h2>1. 基本的なメモリ割り当て</h2>
+            <div class="controls">
+                <button id="createObjects">オブジェクト作成</button>
+                <button id="clearObjects">オブジェクトクリア</button>
+                <span id="objectCount">作成オブジェクト数: 0</span>
+            </div>
+            <div class="memory-info">
+                <div id="memoryUsage">メモリ使用量: 計測中...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>2. メモリリーク実験</h2>
+            <div class="controls">
+                <button id="startLeak">メモリリーク開始</button>
+                <button id="stopLeak">メモリリーク停止</button>
+            </div>
+            <div class="memory-info">
+                <div id="leakMemoryUsage">メモリリーク使用量: 計測中...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>3. ガベージコレクション</h2>
+            <div class="controls">
+                <button id="createGcObjects">GCオブジェクト作成</button>
+                <button id="releaseReferences">参照解放</button>
+                <button id="forceGc">GC実行ヒント</button>
+            </div>
+            <div class="memory-info">
+                <div id="gcMemoryUsage">GCテスト メモリ使用量: 計測中...</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>メモリ使用状況</h2>
+            <div id="memoryChart" class="chart-container">
+                <div class="chart-bar">
+                    <div id="memoryBar" class="bar"></div>
+                </div>
+                <div id="memoryDetails">詳細情報はここに表示されます</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="memory-utils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
