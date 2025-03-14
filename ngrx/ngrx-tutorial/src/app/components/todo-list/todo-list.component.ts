@@ -9,6 +9,19 @@ import * as fromTodo from '../../store/selectors/todo.selectors';
 import { TodoItemComponent } from '../todo-item/todo-item.component';
 import { TodoFormComponent } from '../todo-form/todo-form.component';
 
+/**
+ * TodoListComponent - メインコンポーネント
+ * 
+ * このコンポーネントは、Todoアプリケーションのメインビューを提供します。
+ * NgRxストアからデータを取得し、子コンポーネントにデータを渡します。
+ * 
+ * NgRxチュートリアルにおける役割:
+ * - Storeとコンポーネントの接続方法を示す
+ * - セレクターを使用したデータ取得
+ * - アクションのディスパッチによるイベント処理
+ * - 宣言的なUIパターン（非同期パイプの使用など）
+ */
+
 @Component({
   selector: 'app-todo-list',
   standalone: true,
@@ -77,6 +90,17 @@ import { TodoFormComponent } from '../todo-form/todo-form.component';
   `]
 })
 export class TodoListComponent implements OnInit {
+  /**
+   * Observableプロパティ
+   * 
+   * これらのプロパティは、NgRxストアからのデータストリームを保持します。
+   * Observableを使用することで、データの変更を自動的に検出し、UIを更新できます。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - リアクティブプログラミングパターン
+   * - ストアからのデータ購読
+   * - 非同期データフローの管理
+   */
   todos$: Observable<Todo[]>;
   loading$: Observable<boolean>;
   error$: Observable<any>;
@@ -84,6 +108,16 @@ export class TodoListComponent implements OnInit {
   activeCount$: Observable<number>;
   completedCount$: Observable<number>;
 
+  /**
+   * コンストラクタ
+   * 
+   * NgRxストアを注入し、セレクターを使用してデータを取得します。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - 依存性注入を通じたStoreへのアクセス
+   * - セレクターを使用したデータ取得
+   * - コンポーネント初期化時のストア接続
+   */
   constructor(private store: Store<AppState>) {
     this.todos$ = this.store.select(fromTodo.selectAllTodos);
     this.loading$ = this.store.select(fromTodo.selectTodosLoading);
@@ -93,14 +127,41 @@ export class TodoListComponent implements OnInit {
     this.completedCount$ = this.store.select(fromTodo.selectCompletedTodoCount);
   }
 
+  /**
+   * 初期化ライフサイクルフック
+   * 
+   * コンポーネントの初期化時に、Todoデータの読み込みアクションをディスパッチします。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - コンポーネントライフサイクルとアクションディスパッチの統合
+   * - アプリケーション起動時のデータ取得パターン
+   */
   ngOnInit(): void {
     this.store.dispatch(TodoActions.loadTodos());
   }
 
+  /**
+   * Todoの切り替えハンドラー
+   * 
+   * 子コンポーネントからのイベントを処理し、対応するアクションをディスパッチします。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - コンポーネント間の通信パターン
+   * - ユーザーインタラクションからアクションへの変換
+   */
   onToggle(id: number): void {
     this.store.dispatch(TodoActions.toggleTodo({ id }));
   }
 
+  /**
+   * Todoの削除ハンドラー
+   * 
+   * 子コンポーネントからのイベントを処理し、対応するアクションをディスパッチします。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - イベント処理とアクションディスパッチの分離
+   * - 単一方向のデータフロー
+   */
   onDelete(id: number): void {
     this.store.dispatch(TodoActions.deleteTodo({ id }));
   }

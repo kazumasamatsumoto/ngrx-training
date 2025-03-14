@@ -2,6 +2,19 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Todo } from '../../models/todo.model';
 
+/**
+ * TodoItemComponent - 個別のTodoアイテムを表示するコンポーネント
+ * 
+ * このコンポーネントは、単一のTodoアイテムを表示し、
+ * ユーザーがTodoの完了状態を切り替えたり、Todoを削除したりするための
+ * インタラクションを提供します。
+ * 
+ * NgRxチュートリアルにおける役割:
+ * - 表示と状態管理の分離
+ * - 親コンポーネントとの通信パターン
+ * - イベント駆動型のインタラクション
+ */
+
 @Component({
   selector: 'app-todo-item',
   standalone: true,
@@ -67,14 +80,57 @@ import { Todo } from '../../models/todo.model';
   `]
 })
 export class TodoItemComponent {
+  /**
+   * 入力プロパティ
+   * 
+   * 親コンポーネント（TodoListComponent）から渡されるTodoオブジェクト。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - コンポーネント間のデータ受け渡し
+   * - 単一方向のデータフロー
+   * - プレゼンテーションコンポーネントパターン
+   */
   @Input() todo!: Todo;
+  
+  /**
+   * 出力イベント
+   * 
+   * ユーザーアクションに応じて親コンポーネントに通知するためのイベント。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - コンポーネント間の通信
+   * - イベント駆動型アーキテクチャ
+   * - 関心の分離（このコンポーネントはStoreを直接操作しない）
+   */
   @Output() toggle = new EventEmitter<number>();
   @Output() delete = new EventEmitter<number>();
 
+  /**
+   * Todoの切り替えハンドラー
+   * 
+   * チェックボックスがクリックされたときに呼び出され、
+   * 親コンポーネントにTodoのIDを通知します。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - ユーザーインタラクションのハンドリング
+   * - イベントの発行
+   * - 親コンポーネントへの通知
+   */
   onToggle(): void {
     this.toggle.emit(this.todo.id);
   }
 
+  /**
+   * Todoの削除ハンドラー
+   * 
+   * 削除ボタンがクリックされたときに呼び出され、
+   * 親コンポーネントにTodoのIDを通知します。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - ユーザーインタラクションのハンドリング
+   * - イベントの発行
+   * - 親コンポーネントへの通知
+   */
   onDelete(): void {
     this.delete.emit(this.todo.id);
   }

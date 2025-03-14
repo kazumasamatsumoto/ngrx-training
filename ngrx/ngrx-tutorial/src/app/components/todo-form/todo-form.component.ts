@@ -5,6 +5,18 @@ import { Store } from '@ngrx/store';
 import { AppState } from '../../store/reducers';
 import * as TodoActions from '../../store/actions/todo.actions';
 
+/**
+ * TodoFormComponent - 新しいTodoを追加するためのフォームコンポーネント
+ * 
+ * このコンポーネントは、ユーザーが新しいTodoを入力して追加するための
+ * フォームを提供します。
+ * 
+ * NgRxチュートリアルにおける役割:
+ * - ユーザー入力からアクションへの変換
+ * - フォーム処理とStore操作の統合
+ * - コンポーネントからのアクションディスパッチ
+ */
+
 @Component({
   selector: 'app-todo-form',
   standalone: true,
@@ -54,10 +66,39 @@ import * as TodoActions from '../../store/actions/todo.actions';
   `]
 })
 export class TodoFormComponent {
+  /**
+   * フォーム入力値
+   * 
+   * ユーザーが入力したTodoのタイトルを保持します。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - ローカルコンポーネント状態の管理
+   * - 双方向データバインディング（[(ngModel)]）の使用
+   */
   todoTitle = '';
 
+  /**
+   * コンストラクタ
+   * 
+   * NgRxストアを注入します。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - 依存性注入を通じたStoreへのアクセス
+   * - コンポーネントとStoreの接続
+   */
   constructor(private store: Store<AppState>) {}
 
+  /**
+   * Todoの追加ハンドラー
+   * 
+   * フォームが送信されたときに呼び出され、
+   * 入力されたタイトルを使用してaddTodoアクションをディスパッチします。
+   * 
+   * NgRxチュートリアルでの意義:
+   * - ユーザー入力の検証（空白チェック）
+   * - アクションのディスパッチ
+   * - フォーム送信後の状態リセット
+   */
   addTodo(): void {
     if (this.todoTitle.trim()) {
       this.store.dispatch(TodoActions.addTodo({ title: this.todoTitle.trim() }));
