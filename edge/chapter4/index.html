@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chapter 4: Edgeブラウザでのメモリプロファイリング</title>
+    <link rel="stylesheet" href="../common.css" />
+    <!-- Chart.jsの読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <style>
       body {
         font-family: "Segoe UI", "Meiryo UI", sans-serif;
@@ -163,6 +166,27 @@
     </style>
   </head>
   <body>
+    <div class="nav-container">
+      <ul class="main-nav">
+        <li>
+          <a href="../chapter1/index.html"
+            >Chapter 1: ブラウザのメモリ管理の基本</a
+          >
+        </li>
+        <li>
+          <a href="../chapter2/index.html">Chapter 2: メモリリークの検出</a>
+        </li>
+        <li>
+          <a href="../chapter3/index.html">Chapter 3: パフォーマンス分析</a>
+        </li>
+        <li>
+          <a href="../chapter4/index.html" class="active"
+            >Chapter 4: 高度なメモリ最適化</a
+          >
+        </li>
+      </ul>
+    </div>
+
     <div class="container">
       <h1>Chapter 4: Edgeブラウザでのメモリプロファイリング</h1>
 
@@ -301,6 +325,25 @@
       </div>
     </div>
 
+    <!-- チュートリアル -->
+    <div id="tutorialContainer" class="tutorial-container hidden">
+      <div class="tutorial-header">
+        <h3 id="tutorialTitle">ようこそ</h3>
+        <button id="tutorialClose" class="tutorial-close">×</button>
+      </div>
+      <div id="tutorialContent" class="tutorial-content">
+        チュートリアルの内容がここに表示されます。
+      </div>
+      <div class="tutorial-navigation">
+        <button id="tutorialPrev" disabled>前へ</button>
+        <button id="tutorialNext">次へ</button>
+      </div>
+    </div>
+
+    <!-- スクリプト -->
+    <script src="../common.js"></script>
+    <script src="../chart.js"></script>
+    <script src="../tutorial.js"></script>
     <script src="index.js"></script>
   </body>
 </html>

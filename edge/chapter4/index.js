@@ -70,7 +70,8 @@ function updateDOMDisplay(memoryData) {
 }
 
 // メモリ使用量の履歴を保存する配列
-let memoryHistory = [];
+// common.jsですでに宣言されているため削除
+// let memoryHistory = [];
 
 // メモリ使用量を記録する関数
 function recordMemoryUsage() {
@@ -78,12 +79,6 @@ function recordMemoryUsage() {
   if (!memoryData) return;
 
   const timestamp = new Date();
-  memoryHistory.push({
-    timestamp,
-    usedJSHeapSize: memoryData.usedJSHeapSize,
-    totalJSHeapSize: memoryData.totalJSHeapSize,
-  });
-
   // 最大100件まで保存
   if (memoryHistory.length > 100) {
     memoryHistory.shift();
@@ -108,9 +103,6 @@ function startMemoryMonitoring() {
   }
 
   addLogEntry("メモリ監視を開始しました。");
-  memoryHistory = [];
-  monitoringIntervalId = setInterval(recordMemoryUsage, 1000);
-
   // ボタンの状態を更新
   document.getElementById("start-monitoring").disabled = true;
   document.getElementById("stop-monitoring").disabled = false;

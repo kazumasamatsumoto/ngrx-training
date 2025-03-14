@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chapter 1: ブラウザのメモリ管理の基本</title>
+    <title>{{TITLE}}</title>
     <link rel="stylesheet" href="../common.css" />
     <!-- Chart.jsの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -12,23 +12,29 @@
     <div class="nav-container">
       <ul class="main-nav">
         <li>
-          <a href="../chapter1/index.html" class="active"
+          <a href="../chapter1/index.html" {{ACTIVE_CHAPTER1}}
             >Chapter 1: ブラウザのメモリ管理の基本</a
           >
         </li>
         <li>
-          <a href="../chapter2/index.html">Chapter 2: メモリリークの検出</a>
+          <a href="../chapter2/index.html" {{ACTIVE_CHAPTER2}}
+            >Chapter 2: メモリリークの検出</a
+          >
         </li>
         <li>
-          <a href="../chapter3/index.html">Chapter 3: パフォーマンス分析</a>
+          <a href="../chapter3/index.html" {{ACTIVE_CHAPTER3}}
+            >Chapter 3: パフォーマンス分析</a
+          >
         </li>
         <li>
-          <a href="../chapter4/index.html">Chapter 4: 高度なメモリ最適化</a>
+          <a href="../chapter4/index.html" {{ACTIVE_CHAPTER4}}
+            >Chapter 4: 高度なメモリ最適化</a
+          >
         </li>
       </ul>
     </div>
 
-    <h1>Chapter 1: ブラウザのメモリ管理の基本</h1>
+    <h1>{{TITLE}}</h1>
 
     <div class="container" id="browserInfo">
       <h2>ブラウザ情報</h2>
@@ -159,23 +165,7 @@
       </div>
     </div>
 
-    <div class="container">
-      <h2>Chapter 1: ブラウザのメモリ管理の基本</h2>
-      <p>
-        このチャプターでは、ブラウザのメモリ管理の基本概念と、JavaScriptのメモリ使用状況を監視する方法を学びます。
-      </p>
-      <p>
-        ブラウザのメモリ管理を理解することは、Webアプリケーションのパフォーマンスを最適化する上で非常に重要です。
-        特にEdgeブラウザでは、<code>performance.memory</code>
-        APIを使用してJavaScriptのメモリ使用状況をリアルタイムで監視できます。
-      </p>
-      <p>このページでは、以下の内容を実践的に学ぶことができます：</p>
-      <ul>
-        <li>JavaScriptのメモリ使用状況を監視する方法</li>
-        <li>メモリ使用量の変化をリアルタイムで可視化する方法</li>
-        <li>メモリ使用状況のデータを記録し、分析する方法</li>
-      </ul>
-    </div>
+    {{CHAPTER_SPECIFIC_CONTENT}}
 
     <div class="container">
       <h2>使い方</h2>

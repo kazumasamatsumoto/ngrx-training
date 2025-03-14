@@ -75,7 +75,8 @@ function updateDOMDisplay(memoryInfo) {
   }
 }
 
-// メモリ使用状況の履歴の最大長を設定
+// メモリ使用状況の履歴を保存する配列
+const memoryHistory = [];
 const maxHistoryLength = 50;
 
 // メモリ使用状況の履歴を記録する関数

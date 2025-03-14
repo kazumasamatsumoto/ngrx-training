@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>メモリ監視テスト</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      button {
+        padding: 10px;
+        margin: 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #log {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 5px;
+        height: 200px;
+        overflow-y: auto;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>メモリ監視テスト</h1>
+
+    <div>
+      <button id="startMonitoring">メモリ監視開始</button>
+      <button id="stopMonitoring">メモリ監視停止</button>
+      <button id="createObject">10MBオブジェクト作成</button>
+    </div>
+
+    <div id="memoryInfo">
+      <h2>メモリ情報</h2>
+      <p>総JSヒープサイズ: <span id="totalHeapSize">-</span></p>
+      <p>使用中のJSヒープサイズ: <span id="usedHeapSize">-</span></p>
+      <p>JSヒープサイズ上限: <span id="heapSizeLimit">-</span></p>
+      <p>使用率: <span id="memoryUsage">-</span></p>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+      // グローバル変数
+      let memoryMonitorInterval = null;
+
+      // バイト数を人間が読みやすい形式に変換する関数
+      function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (
+          parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) +
+          " " +
+          sizes[i]
+        );
+      }
+
+      // ログにメッセージを追加する関数
+      function log(message) {
+        const logElement = document.getElementById("log");
+        const logEntry = document.createElement("div");
+        logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        logElement.appendChild(logEntry);
+        logElement.scrollTop = logElement.scrollHeight;
+      }
+
+      // メモリ使用状況を表示する関数
+      function displayMemoryUsage() {
+        if (performance && performance.memory) {
+          const memoryInfo = performance.memory;
+
+          // DOMに表示
+          document.getElementById("totalHeapSize").textContent = formatBytes(
+            memoryInfo.totalJSHeapSize
+          );
+          document.getElementById("usedHeapSize").textContent = formatBytes(
+            memoryInfo.usedJSHeapSize
+          );
+          document.getElementById("heapSizeLimit").textContent = formatBytes(
+            memoryInfo.jsHeapSizeLimit
+          );
+          document.getElementById("memoryUsage").textContent =
+            (
+              (memoryInfo.usedJSHeapSize / memoryInfo.jsHeapSizeLimit) *
+              100
+            ).toFixed(2) + "%";
+
+          log(
+            `メモリ情報を更新しました: 使用中=${formatBytes(
+              memoryInfo.usedJSHeapSize
+            )}`
+          );
+          return memoryInfo;
+        } else {
+          log("このブラウザではperformance.memoryがサポートされていません");
+          return null;
+        }
+      }
+
+      // 大きなオブジェクトを作成する関数
+      function createLargeObject(sizeInMB) {
+        const bytes = sizeInMB * 1024 * 1024;
+        const buffer = new ArrayBuffer(bytes);
+        const array = new Float64Array(buffer);
+        for (let i = 0; i < array.length; i++) {
+          array[i] = Math.random();
+        }
+        log(`${sizeInMB}MBのオブジェクトを作成しました`);
+        return array;
+      }
+
+      // メモリ監視を開始する関数
+      function startMemoryMonitoring(intervalMs = 1000) {
+        // 既存の監視を停止
+        if (memoryMonitorInterval) {
+          clearInterval(memoryMonitorInterval);
+        }
+
+        // 初回実行
+        displayMemoryUsage();
+
+        // 定期的に実行
+        memoryMonitorInterval = setInterval(displayMemoryUsage, intervalMs);
+        log(`メモリ監視を開始しました（間隔: ${intervalMs}ms）`);
+      }
+
+      // メモリ監視を停止する関数
+      function stopMemoryMonitoring() {
+        if (memoryMonitorInterval) {
+          clearInterval(memoryMonitorInterval);
+          memoryMonitorInterval = null;
+          log("メモリ監視を停止しました");
+        }
+      }
+
+      // DOMが読み込まれたら実行
+      document.addEventListener("DOMContentLoaded", () => {
+        log("テストページが読み込まれました");
+
+        // 初期メモリ使用状況を表示
+        displayMemoryUsage();
+
+        // ボタンのイベントリスナーを設定
+        document
+          .getElementById("startMonitoring")
+          .addEventListener("click", () => {
+            startMemoryMonitoring();
+          });
+
+        document
+          .getElementById("stopMonitoring")
+          .addEventListener("click", () => {
+            stopMemoryMonitoring();
+          });
+
+        document
+          .getElementById("createObject")
+          .addEventListener("click", () => {
+            window.largeObject = createLargeObject(10);
+            displayMemoryUsage();
+          });
+      });
+    </script>
+  </body>
+</html>
