@@ -137,24 +137,11 @@
       }
 
       .long-arrow {
-        position: absolute;
-        top: 0;
-        left: 10px;
-        width: calc(100% - 70px);
-        height: 2px;
-        background-color: #f44336;
+        display: none;
       }
 
       .long-arrow::after {
-        content: "";
-        position: absolute;
-        right: -1px;
-        top: -4px;
-        width: 0;
-        height: 0;
-        border-left: 8px solid #f44336;
-        border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent;
+        display: none;
       }
 
       .address {
@@ -184,6 +171,7 @@
         padding: 12px;
         margin: 15px 0;
         background-color: rgba(255, 255, 255, 0.7);
+        position: relative;
       }
 
       .memory-address {
@@ -334,9 +322,7 @@
                 <span class="variable-name">obj1</span>
                 <span class="variable-value">0xA001</span>
               </div>
-              <div class="arrow-container">
-                <div class="long-arrow"></div>
-              </div>
+
               <div class="note">
                 obj1はヒープ上のオブジェクトへの参照（メモリアドレス）を保持
               </div>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NgRx Todoアプリケーション解説</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .diagram {
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .diagram img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .flow-diagram {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 40px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-item {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            width: 150px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .flow-item h4 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        
+        .flow-arrow {
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 50px;
+            text-align: center;
+            font-size: 24px;
+            color: #7f8c8d;
+        }
+        
+        .code-example {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            font-size: 14px;
+        }
+        
+        .component-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .component-box {
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            padding: 15px;
+            width: 200px;
+            background-color: #ecf0f1;
+        }
+        
+        .component-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2980b9;
+        }
+        
+        .component-content {
+            font-size: 14px;
+        }
+        
+        .interaction-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 40px 0;
+        }
+        
+        .interaction-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .step-number {
+            background-color: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .step-description {
+            flex-grow: 1;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .ngrx-entity {
+            background-color: #e8f4fd;
+            border: 1px solid #b6d9f2;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .ngrx-entity h3 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .highlight {
+            background-color: #ffffcc;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .two-column {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .column {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .flow-diagram {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .flow-item {
+                width: 80%;
+                margin-bottom: 20px;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            
+            .two-column {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>NgRx Todoアプリケーション解説</h1>
+    
+    <div class="container">
+        <h2>NgRxとは？</h2>
+        <p>NgRxは、Angularアプリケーションのための状態管理ライブラリです。Reduxパターンに基づいており、予測可能な方法でアプリケーションの状態を管理します。NgRxは、複雑なアプリケーションでの状態管理を簡素化し、デバッグを容易にします。</p>
+        
+        <div class="diagram">
+            <svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- NgRx全体の流れ図 -->
+                
+                <!-- コンポーネント -->
+                <rect x="100" y="100" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="175" y="145" text-anchor="middle" font-size="16" font-weight="bold">コンポーネント</text>
+                
+                <!-- アクション -->
+                <rect x="350" y="100" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="425" y="145" text-anchor="middle" font-size="16" font-weight="bold">アクション</text>
+                
+                <!-- リデューサー -->
+                <rect x="600" y="100" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="675" y="145" text-anchor="middle" font-size="16" font-weight="bold">リデューサー</text>
+                
+                <!-- エフェクト -->
+                <rect x="350" y="250" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="425" y="295" text-anchor="middle" font-size="16" font-weight="bold">エフェクト</text>
+                
+                <!-- ストア -->
+                <rect x="600" y="250" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="675" y="295" text-anchor="middle" font-size="16" font-weight="bold">ストア</text>
+                
+                <!-- セレクター -->
+                <rect x="100" y="250" width="150" height="80" rx="5" ry="5" fill="#e8f4fd" stroke="#3498db" stroke-width="2"/>
+                <text x="175" y="295" text-anchor="middle" font-size="16" font-weight="bold">セレクター</text>
+                
+                <!-- 矢印 -->
+                <!-- コンポーネント → アクション -->
+                <path d="M250 140 C280 140 320 140 350 140" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="300" y="130" text-anchor="middle" font-size="12">ディスパッチ</text>
+                
+                <!-- アクション → リデューサー -->
+                <path d="M500 140 C530 140 570 140 600 140" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="550" y="130" text-anchor="middle" font-size="12">処理</text>
+                
+                <!-- リデューサー → ストア -->
+                <path d="M675 180 C675 200 675 230 675 250" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="700" y="215" text-anchor="middle" font-size="12">更新</text>
+                
+                <!-- ストア → セレクター -->
+                <path d="M675 330 C600 350 500 350 425 350 C350 350 250 350 175 330" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="425" y="370" text-anchor="middle" font-size="12">選択</text>
+                
+                <!-- セレクター → コンポーネント -->
+                <path d="M175 250 C175 230 175 200 175 180" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="150" y="215" text-anchor="middle" font-size="12">購読</text>
+                
+                <!-- アクション → エフェクト -->
+                <path d="M400 180 C400 200 400 230 400 250" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="375" y="215" text-anchor="middle" font-size="12">処理</text>
+                
+                <!-- エフェクト → アクション -->
+                <path d="M450 250 C450 230 450 210 450 180" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+                <text x="475" y="215" text-anchor="middle" font-size="12">新しいアクション</text>
+                
+                <!-- 矢印の先端定義 -->
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#7f8c8d"/>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+        
+        <h3>NgRxの主要コンポーネント</h3>
+        <div class="flow-diagram">
+            <div class="flow-item">
+                <h4>アクション</h4>
+                <p>アプリケーション内で発生するイベントを表す</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <h4>リデューサー</h4>
+                <p>アクションに基づいて状態を更新する純粋関数</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <h4>ストア</h4>
+                <p>アプリケーションの状態を保持</p>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <h4>セレクター</h4>
+                <p>状態から必要なデータを取得</p>
+            </div>
+        </div>
+        
+        <div class="ngrx-entity">
+            <h3>NgRx Entity</h3>
+            <p>NgRx Entityは、エンティティコレクションを効率的に管理するためのユーティリティを提供します。IDをキーとして使用し、エンティティをオブジェクトとして保存することで、配列よりも効率的なCRUD操作を実現します。</p>
+            <div class="code-example">
+                <pre>export const adapter: EntityAdapter&lt;Todo&gt; = createEntityAdapter&lt;Todo&gt;();</pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Todoアプリケーションの構造</h2>
+        
+        <div class="component-diagram">
+            <div class="component-box">
+                <div class="component-title">モデル</div>
+                <div class="component-content">
+                    <p>Todo</p>
+                    <ul>
+                        <li>id: number</li>
+                        <li>title: string</li>
+                        <li>completed: boolean</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">コンポーネント</div>
+                <div class="component-content">
+                    <ul>
+                        <li>AppComponent</li>
+                        <li>TodoListComponent</li>
+                        <li>TodoFormComponent</li>
+                        <li>TodoItemComponent</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">サービス</div>
+                <div class="component-content">
+                    <p>TodoService</p>
+                    <ul>
+                        <li>getTodos()</li>
+                        <li>addTodo(title)</li>
+                        <li>toggleTodo(id)</li>
+                        <li>deleteTodo(id)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">アクション</div>
+                <div class="component-content">
+                    <ul>
+                        <li>loadTodos</li>
+                        <li>addTodo</li>
+                        <li>toggleTodo</li>
+                        <li>deleteTodo</li>
+                        <li>成功/失敗アクション</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">リデューサー</div>
+                <div class="component-content">
+                    <p>todoReducer</p>
+                    <ul>
+                        <li>EntityStateを使用</li>
+                        <li>loading, error状態</li>
+                        <li>CRUD操作の処理</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">エフェクト</div>
+                <div class="component-content">
+                    <p>TodoEffects</p>
+                    <ul>
+                        <li>loadTodos$</li>
+                        <li>addTodo$</li>
+                        <li>toggleTodo$</li>
+                        <li>deleteTodo$</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="component-box">
+                <div class="component-title">セレクター</div>
+                <div class="component-content">
+                    <ul>
+                        <li>selectAllTodos</li>
+                        <li>selectTodosLoading</li>
+                        <li>selectCompletedTodos</li>
+                        <li>selectActiveTodos</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="diagram">
+            <svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                <!-- アプリケーション構造図 - 改良版 -->
+                
+                <!-- コンポーネント層 -->
+                <rect x="150" y="50" width="500" height="100" rx="5" ry="5" fill="#e1f5fe" stroke="#03a9f4" stroke-width="2"/>
+                <text x="400" y="85" text-anchor="middle" font-size="18" font-weight="bold">コンポーネント層</text>
+                <text x="400" y="120" text-anchor="middle" font-size="14">AppComponent, TodoListComponent, TodoFormComponent, TodoItemComponent</text>
+                
+                <!-- NgRx層 -->
+                <rect x="150" y="220" width="500" height="220" rx="5" ry="5" fill="#e8f5e9" stroke="#4caf50" stroke-width="2"/>
+                <text x="400" y="250" text-anchor="middle" font-size="18" font-weight="bold">NgRx層</text>
+                
+                <!-- NgRx内部コンポーネント -->
+                <rect x="180" y="280" width="130" height="100" rx="5" ry="5" fill="#c8e6c9" stroke="#4caf50" stroke-width="1"/>
+                <text x="245" y="310" text-anchor="middle" font-size="16" font-weight="bold">アクション</text>
+                <text x="245" y="340" text-anchor="middle" font-size="12">loadTodos, addTodo,</text>
+                <text x="245" y="360" text-anchor="middle" font-size="12">toggleTodo, deleteTodo</text>
+                
+                <rect x="335" y="280" width="130" height="100" rx="5" ry="5" fill="#c8e6c9" stroke="#4caf50" stroke-width="1"/>
+                <text x="400" y="310" text-anchor="middle" font-size="16" font-weight="bold">リデューサー</text>
+                <text x="400" y="350" text-anchor="middle" font-size="12">todoReducer (EntityState)</text>
+                
+                <rect x="490" y="280" width="130" height="100" rx="5" ry="5" fill="#c8e6c9" stroke="#4caf50" stroke-width="1"/>
+                <text x="555" y="310" text-anchor="middle" font-size="16" font-weight="bold">セレクター</text>
+                <text x="555" y="340" text-anchor="middle" font-size="12">selectAllTodos,</text>
+                <text x="555" y="360" text-anchor="middle" font-size="12">selectActiveTodos</text>
+                
+                <!-- サービス層 -->
+                <rect x="150" y="490" width="200" height="80" rx="5" ry="5" fill="#fff3e0" stroke="#ff9800" stroke-width="2"/>
+                <text x="250" y="525" text-anchor="middle" font-size="16" font-weight="bold">サービス層</text>
+                <text x="250" y="550" text-anchor="middle" font-size="14">TodoService (API通信)</text>
+                
+                <!-- エフェクト層 -->
+                <rect x="450" y="490" width="200" height="80" rx="5" ry="5" fill="#ffebee" stroke="#f44336" stroke-width="2"/>
+                <text x="550" y="525" text-anchor="middle" font-size="16" font-weight="bold">エフェクト層</text>
+                <text x="550" y="550" text-anchor="middle" font-size="14">TodoEffects (副作用処理)</text>
+                
+                <!-- 矢印 -->
+                <!-- コンポーネント → アクション -->
+                <path d="M245 150 L245 280" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="220" y="200" text-anchor="middle" font-size="14">ディスパッチ</text>
+                
+                <!-- アクション → リデューサー -->
+                <path d="M310 330 L335 330" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                
+                <!-- リデューサー → セレクター -->
+                <path d="M465 330 L490 330" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                
+                <!-- セレクター → コンポーネント -->
+                <path d="M555 280 L555 150" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="580" y="200" text-anchor="middle" font-size="14">購読</text>
+                
+                <!-- アクション → エフェクト -->
+                <path d="M245 380 L245 430 C245 460 350 490 450 490" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="300" y="450" text-anchor="middle" font-size="14">処理</text>
+                
+                <!-- エフェクト → サービス -->
+                <path d="M450 530 L350 530" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="400" y="515" text-anchor="middle" font-size="12">呼び出し</text>
+                
+                <!-- サービス → エフェクト -->
+                <path d="M350 550 L450 550" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="400" y="570" text-anchor="middle" font-size="12">応答</text>
+                
+                <!-- エフェクト → アクション -->
+                <path d="M550 490 C550 460 400 430 300 430 C270 430 245 430 245 380" stroke="#7f8c8d" stroke-width="2" fill="none" marker-end="url(#arrowhead2)"/>
+                <text x="400" y="410" text-anchor="middle" font-size="14">新しいアクション</text>
+                
+                <!-- 矢印の先端定義 -->
+                <defs>
+                    <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#7f8c8d"/>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>コンポーネントと機能の詳細解説</h2>
+        
+        <p>ここでは、Todoアプリケーションの各コンポーネントやその他の要素が具体的に何を実装しているのかを詳しく解説します。</p>
+        
+        <h3>コンポーネント</h3>
+        
+        <div class="ngrx-entity">
+            <h4>AppComponent</h4>
+            <p>アプリケーションのルートコンポーネントです。主な役割は以下の通りです：</p>
+            <ul>
+                <li>アプリケーションのレイアウトコンテナを提供</li>
+                <li>RouterOutletを通じて子コンポーネントを表示</li>
+                <li>全体的なスタイリングの適用</li>
+            </ul>
+        </div>
+        
+        <div class="ngrx-entity">
+            <h4>TodoListComponent</h4>
+            <p>Todoアプリケーションのメインビューを提供するコンポーネントです。主な役割は以下の通りです：</p>
+            <ul>
+                <li>NgRxストアからTodoデータを取得して表示</li>
+                <li>TodoFormComponentとTodoItemComponentを統合</li>
+                <li>読み込み状態やエラー状態の管理と表示</li>
+                <li>Todoの切り替えや削除のイベントハンドリング</li>
+                <li>未完了タスク数や合計タスク数の表示</li>
+            </ul>
+            <p>このコンポーネントは、Storeとコンポーネントの接続方法、セレクターを使用したデータ取得、アクションのディスパッチによるイベント処理、非同期パイプを使用した宣言的なUIパターンを示しています。</p>
+        </div>
+        
+        <div class="ngrx-entity">
+            <h4>TodoFormComponent</h4>
+            <p>新しいTodoを追加するためのフォームを提供するコンポーネントです。主な役割は以下の通りです：</p>
+            <ul>
+                <li>ユーザーが新しいTodoのタイトルを入力するためのフォームを表示</li>
+                <li>入力値のバリデーション（空白チェック）</li>
+                <li>フォーム送信時にaddTodoアクションをディスパッチ</li>
+                <li>送信後の入力フィールドのクリア</li>
+            </ul>
+            <p>このコンポーネントは、ユーザー入力からアクションへの変換、フォーム処理とStore操作の統合、コンポーネントからのアクションディスパッチを示しています。</p>
+        </div>
+        
+        <div class="ngrx-entity">
+            <h4>TodoItemComponent</h4>
+            <p>個別のTodoアイテムを表示するコンポーネントです。主な役割は以下の通りです：</p>
+            <ul>
+                <li>単一のTodoアイテムの表示</li>
+                <li>完了状態を示すチェックボックスの提供</li>
+                <li>Todoを削除するためのボタンの提供</li>
+                <li>ユーザーインタラクション（チェックボックスのクリック、削除ボタンのクリック）のイベント発行</li>
+            </ul>
+            <p>このコンポーネントは、表示と状態管理の分離、親コンポーネントとの通信パターン、イベント駆動型のインタラクションを示しています。特に、このコンポーネント自体はStoreを直接操作せず、親コンポーネントにイベントを通知するだけという関心の分離を実践しています。</p>
+        </div>
+        
+        <h3>サービス</h3>
+        
+        <div class="ngrx-entity">
+            <h4>TodoService</h4>
+            <p>データアクセス層を担当するサービスです。主な役割は以下の通りです：</p>
+            <ul>
+                <li>Todoデータの取得（getTodos）</li>
+                <li>新しいTodoの追加（addTodo）</li>
+                <li>Todoの完了状態の切り替え（toggleTodo）</li>
+                <li>Todoの削除（deleteTodo）</li>
+            </ul>
+            <p>このチュートリアルでは、実際のAPIリクエストの代わりにRxJSのofとdelayを使用して非同期操作をシミュレートしています。実際のアプリケーションでは、HTTPクライアントを使用してバックエンドAPIと通信します。</p>
+            <p>このサービスは、Effectsがアクションに応じて呼び出すサービスとして機能し、非同期操作（API呼び出し）をシミュレートし、ビジネスロジックとデータアクセスをコンポーネントから分離しています。</p>
+        </div>
+        
+        <h3>アクション</h3>
+        
+        <div class="ngrx-entity">
+            <h4>Todo Actions</h4>
+            <p>アプリケーション内で発生するイベントを表すアクションです。主なアクションは以下の通りです：</p>
+            <ul>
+                <li><strong>loadTodos関連</strong>: Todoリストの初期読み込みに関連するアクション
+                    <ul>
+                        <li>loadTodos: 読み込み開始</li>
+                        <li>loadTodosSuccess: 読み込み成功（todosペイロードを含む）</li>
+                        <li>loadTodosFailure: 読み込み失敗（errorペイロードを含む）</li>
+                    </ul>
+                </li>
+                <li><strong>addTodo関連</strong>: 新しいTodoの追加に関連するアクション
+                    <ul>
+                        <li>addTodo: 追加開始（titleペイロードを含む）</li>
+                        <li>addTodoSuccess: 追加成功（todoペイロードを含む）</li>
+                        <li>addTodoFailure: 追加失敗（errorペイロードを含む）</li>
+                    </ul>
+                </li>
+                <li><strong>toggleTodo関連</strong>: Todoの完了状態の切り替えに関連するアクション
+                    <ul>
+                        <li>toggleTodo: 切り替え開始（idペイロードを含む）</li>
+                        <li>toggleTodoSuccess: 切り替え成功（todoペイロードを含む）</li>
+                        <li>toggleTodoFailure: 切り替え失敗（errorペイロードを含む）</li>
+                    </ul>
+                </li>
+                <li><strong>deleteTodo関連</strong>: Todoの削除に関連するアクション
+                    <ul>
+                        <li>deleteTodo: 削除開始（idペイロードを含む）</li>
+                        <li>deleteTodoSuccess: 削除成功（idペイロードを含む）</li>
+                        <li>deleteTodoFailure: 削除失敗（errorペイロードを含む）</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>これらのアクションは、イベント駆動型アーキテクチャの基盤、明示的な状態変更の契約、デバッグ可能な履歴の作成を実現しています。</p>
+        </div>
+        
+        <h3>リデューサー</h3>
+        
+        <div class="ngrx-entity">
+            <h4>todoReducer</h4>
+            <p>現在の状態とアクションを受け取り、新しい状態を返す純粋な関数です。主な特徴は以下の通りです：</p>
+            <ul>
+                <li>NgRx Entityを使用してTodoの配列を効率的に管理</li>
+                <li>EntityStateを拡張して、loading（読み込み中）とerror（エラー）の状態を追加</li>
+                <li>各アクションタイプに対する状態更新ロジックを定義</li>
+                <li>adapter.setAll, adapter.addOne, adapter.updateOne, adapter.removeOneなどのEntityAdapter関数を使用</li>
+            </ul>
+            <p>このリデューサーは、状態の不変性を保持した更新方法、NgRx Entityを使用したコレクション管理、アクションに応じた状態の変更ロジックを示しています。</p>
+        </div>
+        
+        <h3>エフェクト</h3>
+        
+        <div class="ngrx-entity">
+            <h4>TodoEffects</h4>
+            <p>アクションに応じて副作用（APIリクエストなど）を処理するためのクラスです。主なエフェクトは以下の通りです：</p>
+            <ul>
+                <li><strong>loadTodos$</strong>: loadTodosアクションに応じてTodoServiceのgetTodosメソッドを呼び出し、結果に応じてloadTodosSuccessまたはloadTodosFailureアクションをディスパッチ</li>
+                <li><strong>addTodo$</strong>: addTodoアクションに応じてTodoServiceのaddTodoメソッドを呼び出し、結果に応じてaddTodoSuccessまたはaddTodoFailureアクションをディスパッチ</li>
+                <li><strong>toggleTodo$</strong>: toggleTodoアクションに応じてTodoServiceのtoggleTodoメソッドを呼び出し、結果に応じてtoggleTodoSuccessまたはtoggleTodoFailureアクションをディスパッチ</li>
+                <li><strong>deleteTodo$</strong>: deleteTodoアクションに応じてTodoServiceのdeleteTodoメソッドを呼び出し、結果に応じてdeleteTodoSuccessまたはdeleteTodoFailureアクションをディスパッチ</li>
+            </ul>
+            <p>これらのエフェクトは、アクションと副作用（APIリクエスト）の分離、非同期処理の宣言的な記述、成功/失敗のハンドリングパターンの実装を示しています。また、switchMapやmergeMapなどのRxJSオペレータを使用して、異なる非同期処理パターン（新しいリクエストが来たら前のリクエストをキャンセルする、複数のリクエストを並行して処理するなど）を実装しています。</p>
+        </div>
+        
+        <h3>セレクター</h3>
+        
+        <div class="ngrx-entity">
+            <h4>Todo Selectors</h4>
+            <p>ステートから必要なデータを取得するための関数です。主なセレクターは以下の通りです：</p>
+            <ul>
+                <li><strong>メタデータセレクター</strong>
+                    <ul>
+                        <li>selectTodosLoading: 読み込み中の状態を選択</li>
+                        <li>selectTodosError: エラー状態を選択</li>
+                    </ul>
+                </li>
+                <li><strong>基本エンティティセレクター</strong>
+                    <ul>
+                        <li>selectAllTodos: すべてのTodoを選択</li>
+                        <li>selectTodoCount: Todoの総数を選択</li>
+                    </ul>
+                </li>
+                <li><strong>派生セレクター</strong>
+                    <ul>
+                        <li>selectCompletedTodos: 完了したTodoを選択</li>
+                        <li>selectActiveTodos: 未完了のTodoを選択</li>
+                        <li>selectCompletedTodoCount: 完了したTodoの数を選択</li>
+                        <li>selectActiveTodoCount: 未完了のTodoの数を選択</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>これらのセレクターは、状態の読み取り方法の標準化、複雑なデータ変換の抽象化、コンポーネントとステート構造の分離を実現しています。また、メモ化（計算結果のキャッシュ）を活用して、パフォーマンスを向上させています。</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>ユーザーインタラクションの流れ</h2>
+        
+        <div class="two-column">
+            <div class="column">
+                <h3>新しいTodoの追加</h3>
+                <div class="interaction-diagram">
+                    <div class="interaction-step">
+                        <div class="step-number">1</div>
+                        <div class="step-description">
+                            ユーザーがフォームに入力して「追加」ボタンをクリック
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">2</div>
+                        <div class="step-description">
+                            <code>TodoFormComponent</code>が<code>addTodo</code>アクションをディスパッチ
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">3</div>
+                        <div class="step-description">
+                            <code>TodoEffects</code>が<code>addTodo$</code>エフェクトで<code>TodoService.addTodo()</code>を呼び出し
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">4</div>
+                        <div class="step-description">
+                            サービスからの応答に基づいて<code>addTodoSuccess</code>または<code>addTodoFailure</code>アクションをディスパッチ
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">5</div>
+                        <div class="step-description">
+                            <code>todoReducer</code>が<code>addTodoSuccess</code>アクションを処理し、<code>adapter.addOne</code>でストアを更新
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">6</div>
+                        <div class="step-description">
+                            <code>TodoListComponent</code>が<code>selectAllTodos</code>セレクターを通じて更新された状態を受け取り、UIを更新
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="column">
+                <h3>Todoの完了状態の切り替え</h3>
+                <div class="interaction-diagram">
+                    <div class="interaction-step">
+                        <div class="step-number">1</div>
+                        <div class="step-description">
+                            ユーザーがTodoのチェックボックスをクリック
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">2</div>
+                        <div class="step-description">
+                            <code>TodoItemComponent</code>が<code>toggle</code>イベントを発行し、<code>TodoListComponent</code>がキャッチ
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">3</div>
+                        <div class="step-description">
+                            <code>TodoListComponent</code>が<code>toggleTodo</code>アクションをディスパッチ
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">4</div>
+                        <div class="step-description">
+                            <code>TodoEffects</code>が<code>toggleTodo$</code>エフェクトで<code>TodoService.toggleTodo()</code>を呼び出し
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">5</div>
+                        <div class="step-description">
+                            サービスからの応答に基づいて<code>toggleTodoSuccess</code>または<code>toggleTodoFailure</code>アクションをディスパッチ
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">6</div>
+                        <div class="step-description">
+                            <code>todoReducer</code>が<code>toggleTodoSuccess</code>アクションを処理し、<code>adapter.updateOne</code>でストアを更新
+                        </div>
+                    </div>
+                    <div class="interaction-step">
+                        <div class="step-number">7</div>
+                        <div class="step-description">
+                            <code>TodoListComponent</code>が<code>selectAllTodos</code>セレクターを通じて更新された状態を受け取り、UIを更新
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>NgRxの利点</h2>
+        
+        <div class="two-column">
+            <div class="column">
+                <h3>予測可能な状態管理</h3>
+                <ul>
+                    <li>単一の信頼できる情報源（ストア）</li>
+                    <li>不変性を保持した状態更新</li>
+                    <li>明示的なアクションによる状態変更</li>
+                </ul>
+                
+                <h3>デバッグ可能性の向上</h3>
+                <ul>
+                    <li>Redux DevToolsによる状態変更の追跡</li>
+                    <li>タイムトラベルデバッグ</li>
+                    <li>アクション履歴の可視化</li>
+                </ul>
+            </div>
+            
+            <div class="column">
+                <h3>コードの分離と再利用性</h3>
+                <ul>
+                    <li>ビジネスロジックとUIの分離</li>
+                    <li>再利用可能なセレクターとリデューサー</li>
+                    <li>テスト容易性の向上</li>
+                </ul>
+                
+                <h3>スケーラビリティ</h3>
+                <ul>
+                    <li>大規模アプリケーションでの状態管理</li>
+                    <li>機能モジュールごとの状態分割</li>
+                    <li>チーム開発での一貫性</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>まとめ</h2>
+        <p>NgRxは、Angularアプリケーションにおける状態管理の強力なソリューションです。このTodoアプリケーションでは、NgRxの基本的な概念（アクション、リデューサー、エフェクト、セレクター）を実装し、予測可能で保守性の高いコードベースを実現しています。</p>
+        
+        <p>特に注目すべき点は以下の通りです：</p>
+        <ul>
+            <li>単一方向のデータフロー（コンポーネント → アクション → リデューサー → ストア → セレクター → コンポーネント）</li>
+            <li>副作用の分離（エフェクトによるAPI通信の処理）</li>
+            <li>NgRx Entityによる効率的なエンティティ管理</li>
+            <li>セレクターによるデータ変換と最適化</li>
+        </ul>
+        
+        <p>これらの概念を理解することで、より複雑なAngularアプリケーションでも、保守性が高く、デバッグしやすい状態管理を実現できます。</p>
+    </div>
+</body>
+</html>

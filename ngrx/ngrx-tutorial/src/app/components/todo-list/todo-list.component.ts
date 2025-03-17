@@ -106,7 +106,6 @@ export class TodoListComponent implements OnInit {
   error$: Observable<any>;
   totalCount$: Observable<number>;
   activeCount$: Observable<number>;
-  completedCount$: Observable<number>;
 
   /**
    * コンストラクタ
@@ -124,7 +123,6 @@ export class TodoListComponent implements OnInit {
     this.error$ = this.store.select(fromTodo.selectTodosError);
     this.totalCount$ = this.store.select(fromTodo.selectTodoCount);
     this.activeCount$ = this.store.select(fromTodo.selectActiveTodoCount);
-    this.completedCount$ = this.store.select(fromTodo.selectCompletedTodoCount);
   }
 
   /**

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { Todo } from '../models/todo.model';
@@ -30,7 +29,7 @@ export class TodoService {
   // 次のID（新しいTodoを追加する際に使用）
   private nextId = 4;
 
-  constructor(private http: HttpClient) {}
+  constructor() {}
 
   /**
    * すべてのTodoを取得

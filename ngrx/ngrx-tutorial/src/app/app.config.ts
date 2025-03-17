@@ -7,7 +7,7 @@ import { provideRouterStore } from '@ngrx/router-store';
 import { provideHttpClient } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { reducers, metaReducers } from './store/reducers';
+import { reducers } from './store/reducers';
 import { TodoEffects } from './store/effects/todo.effects';
 
 /**
@@ -40,7 +40,7 @@ export const appConfig: ApplicationConfig = {
      * - アプリケーション全体の状態管理
      * - リデューサーとメタリデューサーの登録
      */
-    provideStore(reducers, { metaReducers }),
+    provideStore(reducers),
     
     /**
      * NgRx Effectsを設定

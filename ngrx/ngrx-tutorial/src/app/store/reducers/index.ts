@@ -36,15 +36,4 @@ export const reducers: ActionReducerMap<AppState> = {
   todos: fromTodo.todoReducer,
 };
 
-/**
- * メタリデューサーを定義
- * 
- * メタリデューサーは、通常のリデューサーをラップして追加の機能を提供します。
- * 例えば、ロギング、状態の永続化、開発ツールとの統合などに使用されます。
- * 
- * NgRxチュートリアルでの意義:
- * - 開発モードと本番モードの区別
- * - リデューサーの拡張メカニズム
- * - クロスカッティングな関心事の分離
- */
-export const metaReducers: MetaReducer<AppState>[] = isDevMode() ? [] : [];
+// メタリデューサーが必要な場合は、ここで定義します
