@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>構造共有（Structural Sharing）の概念</title>
+    <style>
+      :root {
+        --primary-color: #3f51b5;
+        --secondary-color: #ff4081;
+        --tertiary-color: #4caf50;
+        --light-bg: #f5f5f5;
+        --dark-bg: #263238;
+        --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --shared-color: #4caf50;
+        --new-color: #ff4081;
+        --arrow-color: #ff9800;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--light-bg);
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+
+      .intro {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      .importance {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      .importance h2 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .benefits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .benefit-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+      }
+
+      .benefit-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .benefit-card h3 {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .code-example {
+        background-color: var(--dark-bg);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+      }
+
+      .code-block {
+        font-family: "Courier New", Courier, monospace;
+        white-space: pre;
+        line-height: 1.4;
+      }
+
+      .comment {
+        color: #8bc34a;
+      }
+
+      .keyword {
+        color: #ff9800;
+      }
+
+      .string {
+        color: #9c27b0;
+      }
+
+      .visual-diagram {
+        margin-bottom: 2rem;
+        overflow-x: auto;
+      }
+
+      .states-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .states-container {
+          flex-direction: row;
+          align-items: flex-start;
+        }
+      }
+
+      .state-box {
+        flex: 1;
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+      }
+
+      .state-title {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .state-content {
+        position: relative;
+      }
+
+      .object-container {
+        border: 2px solid var(--primary-color);
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+      }
+
+      .object-label {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        background-color: white;
+        padding: 0 0.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .property {
+        margin: 0.5rem 0;
+        padding: 0.5rem;
+        border-radius: 3px;
+      }
+
+      .nested-object {
+        border: 1px solid var(--primary-color);
+        border-radius: 3px;
+        padding: 0.5rem;
+        margin: 0.5rem 0;
+      }
+
+      .object-reference {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.5rem;
+      }
+
+      .shared-reference {
+        background-color: rgba(76, 175, 80, 0.1);
+        border-left: 3px solid var(--shared-color);
+      }
+
+      .new-reference {
+        background-color: rgba(255, 64, 129, 0.1);
+        border-left: 3px solid var(--new-color);
+      }
+
+      .arrow-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem 0;
+      }
+
+      .arrow {
+        font-size: 2rem;
+        color: var(--arrow-color);
+        position: relative;
+      }
+
+      .arrow-label {
+        position: absolute;
+        white-space: nowrap;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.9rem;
+        background-color: var(--arrow-color);
+        color: white;
+        padding: 0.3rem 0.6rem;
+        border-radius: 3px;
+      }
+
+      .reference-legend {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 3px;
+      }
+
+      .shared-legend {
+        background-color: var(--shared-color);
+      }
+
+      .new-legend {
+        background-color: var(--new-color);
+      }
+
+      .memory-diagram {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      .memory-title {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .memory-boxes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: center;
+      }
+
+      .memory-box {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 1rem;
+        min-width: 150px;
+        position: relative;
+      }
+
+      .memory-box-title {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        background-color: white;
+        padding: 0 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .memory-address {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+      }
+
+      .memory-content {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+      }
+
+      .memory-arrow {
+        position: absolute;
+        border-top: 2px dashed var(--arrow-color);
+        width: 50px;
+        transform-origin: 0 0;
+      }
+
+      .notes {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+      }
+
+      .notes h2 {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .note-item {
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .note-item:before {
+        content: "•";
+        color: var(--secondary-color);
+        font-weight: bold;
+        margin-right: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Chapter 5: 構造共有（Structural Sharing）</h1>
+      </header>
+
+      <div class="intro">
+        <p>
+          構造共有とは、<strong>イミュータブルな状態更新</strong>において、変更がない部分のオブジェクト参照を再利用する手法です。これにより、メモリ効率とパフォーマンスを向上させつつ、イミュータビリティの利点を維持できます。ReduxやNgRxなどの状態管理ライブラリでは、この原則を活用して効率的な状態更新を実現しています。
+        </p>
+      </div>
+
+      <div class="importance">
+        <h2>なぜ構造共有が重要なのか？</h2>
+        <p>
+          イミュータビリティは多くの利点がありますが、純粋に実装すると「状態を更新するたびに完全に新しいオブジェクトツリーを作成する」ことになり、メモリ使用量とパフォーマンスに問題が生じる可能性があります。
+        </p>
+        <p>
+          特に大規模なアプリケーションでは、状態オブジェクトが非常に大きく、深くネストされた構造を持つことがあります。そのような状態を更新するたびに完全にコピーしていたら、メモリ消費が膨大になり、ガベージコレクションの負荷も増大します。
+        </p>
+        <p>
+          構造共有は、この問題を解決するための賢い方法です。変更された部分のパスに沿ったオブジェクトだけを新しく作成し、変更されていない部分は元のオブジェクトの参照をそのまま再利用します。
+        </p>
+      </div>
+
+      <div class="benefits">
+        <div class="benefit-card">
+          <h3>メモリ使用量の削減</h3>
+          <p>
+            変更されない部分のオブジェクトを複製せず、参照を再利用することで、メモリ使用量を大幅に削減できます。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>オブジェクト生成コストの最小化</h3>
+          <p>
+            必要な部分だけを新しく作成するため、オブジェクト生成のコストを最小限に抑えられます。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>効率的な変更検知</h3>
+          <p>
+            変更されたパスのみをチェックすればよいため、変更検知を効率的に行えます。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>メモ化の効果的な活用</h3>
+          <p>
+            参照の同一性を保持できるため、React.memoやNgRxのselectorなどのメモ化（memoization）が効果的に機能します。
+          </p>
+        </div>
+      </div>
+
+      <div class="code-example">
+        <h2>構造共有の実装例</h2>
+        <div class="code-block">
+          <span class="comment"
+            >// 複数のプロパティを持つ複雑な状態オブジェクト</span
+          >
+          <span class="keyword">const</span> state1 = { count: 0, user: { name:
+          <span class="string">"Alice"</span>, age: 30 }, settings: { theme:
+          <span class="string">"dark"</span>, notifications:
+          <span class="keyword">true</span> }, };
+
+          <span class="comment"
+            >//
+            countだけを更新する場合、userとsettingsの参照は再利用される</span
+          >
+          <span class="keyword">const</span> state2 = { ...state1,
+          <span class="comment">// state1のすべてのプロパティをコピー</span>
+          count: 1, <span class="comment">// countプロパティだけを上書き</span>
+          <span class="comment"
+            >//
+            userとsettingsは同じ参照が使われる（コピーされるのは参照だけ）</span
+          >
+          };
+
+          <span class="comment">// 参照の比較で確認</span>
+          console.log(state1.user === state2.user);
+          <span class="comment"
+            >// true（同じ参照）- userオブジェクトは再利用されている</span
+          >
+          console.log(state1.settings === state2.settings);
+          <span class="comment"
+            >// true（同じ参照）- settingsオブジェクトも再利用されている</span
+          >
+        </div>
+      </div>
+
+      <div class="visual-diagram">
+        <h2>構造共有の視覚的理解</h2>
+        <div class="states-container">
+          <div class="state-box">
+            <h3 class="state-title">state1（元の状態）</h3>
+            <div class="state-content">
+              <div class="object-container">
+                <div class="object-label">state1</div>
+                <div class="property new-reference">
+                  <strong>count:</strong> 0
+                </div>
+                <div class="property shared-reference">
+                  <strong>user:</strong>
+                  <div class="nested-object">
+                    name: "Alice"<br />
+                    age: 30
+                  </div>
+                  <div class="object-reference">参照: 0x123A</div>
+                </div>
+                <div class="property shared-reference">
+                  <strong>settings:</strong>
+                  <div class="nested-object">
+                    theme: "dark"<br />
+                    notifications: true
+                  </div>
+                  <div class="object-reference">参照: 0x456B</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow-container">
+            <div class="arrow">
+              <div class="arrow-label">スプレッド演算子で更新</div>
+              →
+            </div>
+          </div>
+
+          <div class="state-box">
+            <h3 class="state-title">state2（更新後の状態）</h3>
+            <div class="state-content">
+              <div class="object-container">
+                <div class="object-label">state2</div>
+                <div class="property new-reference">
+                  <strong>count:</strong> 1
+                  <div class="object-reference">新しい値</div>
+                </div>
+                <div class="property shared-reference">
+                  <strong>user:</strong>
+                  <div class="nested-object">
+                    name: "Alice"<br />
+                    age: 30
+                  </div>
+                  <div class="object-reference">参照: 0x123A（再利用）</div>
+                </div>
+                <div class="property shared-reference">
+                  <strong>settings:</strong>
+                  <div class="nested-object">
+                    theme: "dark"<br />
+                    notifications: true
+                  </div>
+                  <div class="object-reference">参照: 0x456B（再利用）</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reference-legend">
+          <div class="legend-item">
+            <div class="legend-color shared-legend"></div>
+            <div>再利用された参照（構造共有）</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color new-legend"></div>
+            <div>新しく作成された値</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="memory-diagram">
+        <h3 class="memory-title">メモリ内の状態（簡易表現）</h3>
+        <div class="memory-boxes">
+          <div class="memory-box">
+            <div class="memory-box-title">state1オブジェクト</div>
+            <div class="memory-address">アドレス: 0x789C</div>
+            <div class="memory-content">
+              count: 0<br />
+              user: 0x123A → <br />
+              settings: 0x456B →
+            </div>
+          </div>
+
+          <div class="memory-box">
+            <div class="memory-box-title">state2オブジェクト</div>
+            <div class="memory-address">アドレス: 0x789D</div>
+            <div class="memory-content">
+              count: 1<br />
+              user: 0x123A → <br />
+              settings: 0x456B →
+            </div>
+          </div>
+
+          <div class="memory-box">
+            <div class="memory-box-title">userオブジェクト</div>
+            <div class="memory-address">アドレス: 0x123A</div>
+            <div class="memory-content">
+              name: "Alice"<br />
+              age: 30
+            </div>
+          </div>
+
+          <div class="memory-box">
+            <div class="memory-box-title">settingsオブジェクト</div>
+            <div class="memory-address">アドレス: 0x456B</div>
+            <div class="memory-content">
+              theme: "dark"<br />
+              notifications: true
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notes">
+        <h2>構造共有の利点と注意点</h2>
+        <div class="note-item">
+          メモリ効率:
+          変更されない部分のオブジェクトを複製する必要がないため、メモリ使用量を抑えられます。
+        </div>
+        <div class="note-item">
+          パフォーマンス:
+          変更検知が高速化されます（変更された部分だけを比較すればよい）。
+        </div>
+        <div class="note-item">
+          参照の同一性を利用したメモ化が可能です（React.memoやNgRxのselectorなど）。
+        </div>
+        <div class="note-item">
+          ネストされたオブジェクトを更新する場合は、更新パスに沿ったオブジェクトだけを新しく作成し、それ以外は参照を再利用するのがベストプラクティスです。
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

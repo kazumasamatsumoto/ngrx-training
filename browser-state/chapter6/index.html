@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Angularの変更検知（Change Detection）の仕組み</title>
+    <style>
+      :root {
+        --primary-color: #1976d2; /* Angular Blue */
+        --secondary-color: #0d47a1; /* Darker Angular Blue */
+        --accent-color: #dd0031; /* Angular Red (アクセントカラー) */
+        --text-color: #333;
+        --light-bg: #f8f9fa;
+        --code-bg: #f5f5f5;
+        --border-color: #e0e0e0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      header {
+        border-bottom: 2px solid var(--accent-color);
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+        background-color: #fafafa;
+        padding: 20px;
+        border-radius: 5px;
+      }
+
+      h1 {
+        color: var(--primary-color);
+        font-size: 2.2em;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        color: var(--primary-color);
+        font-size: 1.8em;
+        margin-top: 30px;
+        border-left: 5px solid var(--accent-color);
+        padding-left: 10px;
+      }
+
+      h3 {
+        color: var(--secondary-color);
+        font-size: 1.4em;
+        margin-top: 25px;
+      }
+
+      .intro {
+        font-size: 1.1em;
+        background-color: #e1f5fe; /* Light blue background */
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid var(--primary-color);
+      }
+
+      .process-step {
+        display: flex;
+        margin-bottom: 15px;
+        align-items: center;
+      }
+
+      .step-number {
+        background-color: var(--accent-color);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+        flex-shrink: 0;
+        font-weight: bold;
+      }
+
+      .step-content {
+        flex-grow: 1;
+      }
+
+      .highlight-box {
+        background-color: #e3f2fd; /* Light blue background */
+        border-left: 4px solid var(--primary-color);
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .code-block {
+        background-color: #263238; /* Dark background for better contrast */
+        color: #eeffff; /* Light text color */
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        font-family: "Consolas", "Monaco", monospace;
+        margin: 15px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+      }
+
+      .code-comment {
+        color: #546e7a; /* Blue-gray for comments */
+        font-style: italic;
+      }
+
+      .advantages {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin: 20px 0;
+      }
+
+      .advantage-card {
+        flex-basis: calc(33% - 20px);
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        border-top: 3px solid var(--primary-color);
+        transition: transform 0.2s ease-in-out;
+      }
+
+      .advantage-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .advantage-title {
+        color: var(--accent-color);
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+      }
+
+      .diagram {
+        width: 100%;
+        margin: 25px 0;
+        padding: 15px;
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+      }
+
+      .ngrx-section {
+        padding: 20px;
+        border-radius: 5px;
+        margin: 30px 0;
+        background-color: #f3e5f5;
+        border-left: 4px solid #764abc; /* NgRx purple */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      }
+
+      .note {
+        background-color: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 0 4px 4px 0;
+      }
+
+      .example {
+        background-color: #e8f5e9;
+        border-left: 4px solid #4caf50;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 0 4px 4px 0;
+      }
+
+      footer {
+        margin-top: 50px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      @media (max-width: 768px) {
+        .advantage-card {
+          flex-basis: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Chapter 6: Angularの変更検知（Change Detection）の仕組み</h1>
+    </header>
+
+    <section class="intro">
+      <p>
+        このチャプターでは、Angularで使われている変更検知メカニズムの基本的な概念と実装例を紹介します。Reactの仮想DOMとは異なるAngular独自のアプローチを理解し、NgRxとの組み合わせによる最適化方法を学びましょう。
+      </p>
+    </section>
+
+    <section>
+      <h2>Angularの変更検知とは？</h2>
+      <p>
+        簡単に言うと、アプリケーションの状態（データ）が変わったときにそれを検出して画面（DOM）を更新する仕組みです。Reactが仮想DOMを使用するのに対し、Angularは独自の変更検知システムを採用しています。
+      </p>
+    </section>
+
+    <section>
+      <h2>Angularの変更検知の働き方</h2>
+
+      <div class="process-step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>イベント発生</h3>
+          <p>
+            ユーザー操作（クリック、入力など）、タイマー、HTTPレスポンスなどの非同期イベントが発生します。
+          </p>
+        </div>
+      </div>
+
+      <div class="process-step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Zone.jsによるイベント検出</h3>
+          <p>
+            Zone.jsライブラリがこれらのイベントをトラップし、Angularに通知します。Zone.jsはJavaScriptの非同期処理をモニタリングする特殊なライブラリです。
+          </p>
+        </div>
+      </div>
+
+      <div class="process-step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>変更検知の開始</h3>
+          <p>
+            イベントが検出されると、Angularはコンポーネントツリーの検査（変更検知）を開始します。変更検知は通常、ルートコンポーネントから開始され、子コンポーネントへと伝播します。
+          </p>
+        </div>
+      </div>
+
+      <div class="process-step">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <h3>ビューの更新</h3>
+          <p>
+            変更が検出されたコンポーネントのビュー（DOM）が更新されます。Angularはテンプレートバインディングを評価し、必要な部分のみを効率的に更新します。
+          </p>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <div class="flow-diagram">
+          <div class="flow-title">Angularの変更検知フロー図</div>
+
+          <div class="flow-container">
+            <!-- イベント発生部分 -->
+            <div class="flow-section event-section">
+              <div class="flow-box event-box">
+                <div class="icon-circle">
+                  <div class="event-icon">!</div>
+                </div>
+                <div class="flow-text">イベント発生</div>
+                <div class="flow-subtext">ユーザー操作・HTTP・タイマー</div>
+              </div>
+            </div>
+
+            <div class="flow-arrow">→</div>
+
+            <!-- Zone.js部分 -->
+            <div class="flow-section zone-section">
+              <div class="flow-box zone-box">
+                <div class="icon-circle">
+                  <div class="zone-icon">Z</div>
+                </div>
+                <div class="flow-text">Zone.js</div>
+                <div class="flow-subtext">イベントをトラップ</div>
+              </div>
+            </div>
+
+            <div class="flow-arrow">→</div>
+
+            <!-- 変更検知部分 -->
+            <div class="flow-section detector-section">
+              <div class="flow-box detector-box">
+                <div class="icon-circle">
+                  <div class="detector-icon">CD</div>
+                </div>
+                <div class="flow-text">変更検知</div>
+                <div class="flow-subtext">コンポーネントツリーを走査</div>
+              </div>
+            </div>
+
+            <div class="flow-arrow">→</div>
+
+            <!-- DOM更新部分 -->
+            <div class="flow-section update-section">
+              <div class="flow-box update-box">
+                <div class="icon-circle">
+                  <div class="update-icon">&lt;/&gt;</div>
+                </div>
+                <div class="flow-text">DOM更新</div>
+                <div class="flow-subtext">変更箇所のみ反映</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- OnPush最適化フロー -->
+          <div class="onpush-container">
+            <div class="onpush-title">OnPushモード最適化</div>
+            <div class="onpush-flow">
+              <div class="onpush-box">
+                <div class="onpush-dot"></div>
+                <div>入力プロパティの変更</div>
+              </div>
+              <div class="onpush-arrow">→</div>
+              <div class="onpush-box">
+                <div class="onpush-dot"></div>
+                <div>イベント発生</div>
+              </div>
+              <div class="onpush-arrow">→</div>
+              <div class="onpush-box">
+                <div class="onpush-dot"></div>
+                <div>明示的なmarkForCheck()</div>
+              </div>
+              <div class="onpush-arrow">→</div>
+              <div class="onpush-box">
+                <div class="onpush-dot"></div>
+                <div>Asyncパイプ</div>
+              </div>
+            </div>
+            <div class="onpush-text">これらの場合のみ変更検知が実行される</div>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .flow-diagram {
+          width: 100%;
+          background-color: white;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .flow-title {
+          font-size: 1.3em;
+          font-weight: bold;
+          text-align: center;
+          color: var(--primary-color);
+          margin-bottom: 30px;
+        }
+
+        .flow-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 40px;
+        }
+
+        .flow-section {
+          flex: 1;
+          min-width: 140px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .flow-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 15px;
+          border-radius: 8px;
+          width: 100%;
+          max-width: 180px;
+          text-align: center;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .icon-circle {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 10px;
+          font-weight: bold;
+        }
+
+        .event-box {
+          background-color: #e3f2fd;
+        }
+
+        .event-icon {
+          font-size: 24px;
+        }
+
+        .zone-box {
+          background-color: #e8f5e9;
+        }
+
+        .detector-box {
+          background-color: #f3e5f5;
+        }
+
+        .update-box {
+          background-color: #fff3e0;
+        }
+
+        .event-box .icon-circle {
+          background-color: #2196f3;
+          color: white;
+        }
+
+        .zone-box .icon-circle {
+          background-color: #4caf50;
+          color: white;
+        }
+
+        .detector-box .icon-circle {
+          background-color: #9c27b0;
+          color: white;
+        }
+
+        .update-box .icon-circle {
+          background-color: #ff9800;
+          color: white;
+        }
+
+        .flow-arrow {
+          font-size: 24px;
+          color: #78909c;
+          font-weight: bold;
+          margin: 0 5px;
+        }
+
+        .flow-text {
+          font-weight: bold;
+          margin: 10px 0 5px 0;
+        }
+
+        .flow-subtext {
+          font-size: 0.85em;
+          color: #546e7a;
+        }
+
+        /* OnPush最適化フロー */
+        .onpush-container {
+          border-top: 1px dashed #ccc;
+          padding-top: 25px;
+        }
+
+        .onpush-title {
+          text-align: center;
+          font-weight: bold;
+          color: #7986cb;
+          margin-bottom: 20px;
+        }
+
+        .onpush-flow {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 15px;
+        }
+
+        .onpush-box {
+          display: flex;
+          align-items: center;
+          background-color: #e8eaf6;
+          padding: 8px 12px;
+          border-radius: 20px;
+          margin: 5px;
+          font-size: 0.9em;
+        }
+
+        .onpush-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background-color: #7986cb;
+          margin-right: 8px;
+        }
+
+        .onpush-arrow {
+          color: #7986cb;
+          margin: 0 5px;
+          font-weight: bold;
+        }
+
+        .onpush-text {
+          text-align: center;
+          font-size: 0.9em;
+          color: #546e7a;
+          font-style: italic;
+        }
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+          .flow-container {
+            flex-direction: column;
+          }
+
+          .flow-section {
+            margin-bottom: 20px;
+            width: 100%;
+          }
+
+          .flow-arrow {
+            transform: rotate(90deg);
+            margin: 10px 0;
+          }
+
+          .onpush-flow {
+            flex-direction: column;
+          }
+
+          .onpush-arrow {
+            transform: rotate(90deg);
+            margin: 5px 0;
+          }
+        }
+      </style>
+    </section>
+
+    <section>
+      <h2>なぜAngularの変更検知が効率的か？</h2>
+
+      <div class="highlight-box">
+        <h3>Zone.jsとの連携</h3>
+        <p>
+          AngularはZone.jsというライブラリを使って非同期イベントを監視しています。これにより、データが変わる可能性のあるタイミングを正確に把握し、必要なときだけ変更検知を実行します。
+        </p>
+        <div class="code-block">
+          <span class="code-comment"
+            >// Zone.jsの動作を簡略化したシミュレーション</span
+          ><br />
+          class NgZone {<br />
+          &nbsp;&nbsp;constructor(changeDetector) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;this.changeDetector = changeDetector;<br />
+          &nbsp;&nbsp;}<br />
+          <br />
+          &nbsp;&nbsp;<span class="code-comment"
+            >// イベントをトラップして変更検知を実行</span
+          ><br />
+          &nbsp;&nbsp;run(callback) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;console.log("NgZone: イベント検出");<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;callback();<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;console.log("NgZone:
+          変更検知サイクルをトリガー");<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;this.changeDetector.detectChanges();<br />
+          &nbsp;&nbsp;}<br />
+          }
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <h3>単方向データフロー</h3>
+        <p>
+          データは常に親から子へと流れるため、変更が発生したコンポーネントからその子コンポーネントのみをチェックすればよく、無駄な検査を減らせます。これにより、大規模なアプリケーションでも予測可能なデータフローを実現できます。
+        </p>
+      </div>
+
+      <div class="highlight-box">
+        <h3>OnPushモード</h3>
+        <p>
+          デフォルトではすべてのイベント後に検査しますが、OnPushモードを使うと入力プロパティが変わった時だけ検査するようになり、さらに効率化できます。
+        </p>
+        <div class="code-block">
+          <span class="code-comment">// コンポーネントでOnPushモードを設定</span
+          ><br />
+          @Component({<br />
+          &nbsp;&nbsp;selector: 'app-display',<br />
+          &nbsp;&nbsp;templateUrl: './display.component.html',<br />
+          &nbsp;&nbsp;changeDetection: ChangeDetectionStrategy.OnPush<br />
+          })<br />
+          export class DisplayComponent { ... }
+        </div>
+        <p>OnPushモードでは、以下の場合にのみ変更検知が実行されます：</p>
+        <ul>
+          <li>
+            コンポーネントの入力プロパティ（@Input）の参照が変更された場合
+          </li>
+          <li>コンポーネントまたはその子孫からイベントが発生した場合</li>
+          <li>
+            明示的に変更検知が実行された場合（ChangeDetectorRef.markForCheck()）
+          </li>
+          <li>非同期パイプが新しい値を出力した場合</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Angularの変更検知のメリット</h2>
+
+      <div class="advantages">
+        <div class="advantage-card">
+          <div class="advantage-title">予測可能なデータフロー</div>
+          <p>
+            単方向データフローにより、アプリケーションの状態変化が予測しやすくなります。親から子へのデータの流れが明確になるため、デバッグも容易になります。
+          </p>
+        </div>
+
+        <div class="advantage-card">
+          <div class="advantage-title">細かな変更検知の制御</div>
+          <p>
+            OnPushモードやChangeDetectorRefを使って、変更検知のタイミングや範囲を細かく制御できます。これにより、パフォーマンスを最適化できます。
+          </p>
+        </div>
+
+        <div class="advantage-card">
+          <div class="advantage-title">大規模アプリのパフォーマンス</div>
+          <p>
+            コンポーネントごとに変更検知戦略を設定できるため、大規模なアプリケーションでも高いパフォーマンスを維持できます。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ngrx-section">
+      <h2>NgRxとの相性</h2>
+      <p>
+        NgRxなどの状態管理ライブラリと組み合わせると、イミュータブルなデータフローにより変更検知がさらに効率化されます。
+      </p>
+      <p>
+        例えるなら、NgRxは「状態変更の一元管理システム」、Angularの変更検知は「その変更に基づいて必要な部分だけを更新する仕組み」という関係です。この組み合わせで、複雑なアプリでもスムーズな操作感を実現できます。
+      </p>
+
+      <h3>NgRxとAngular変更検知の組み合わせ方</h3>
+      <ol>
+        <li>
+          <strong>Storeからのデータは常にイミュータブル（不変）：</strong>
+          NgRxのReducerは新しいオブジェクトを返すため、参照が変わり、OnPushモードのコンポーネントでも確実に変更が検出されます。
+        </li>
+        <li>
+          <strong>コンポーネントはOnPushモードで設定：</strong>
+          すべてのコンポーネントでOnPushモードを使用することで、不要な変更検知を減らし、パフォーマンスを向上させます。
+        </li>
+        <li>
+          <strong>Selectorで必要なデータだけを取得：</strong>
+          必要なデータだけを選択的に取得することで、不要な更新を防止します。
+        </li>
+      </ol>
+
+      <div class="example">
+        <h4>NgRxとOnPushの組み合わせ例</h4>
+        <div class="code-block">
+          <span class="code-comment">// カウンターコンポーネント</span><br />
+          @Component({<br />
+          &nbsp;&nbsp;selector: 'app-counter',<br />
+          &nbsp;&nbsp;template: `<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&lt;div&gt;カウント: {{ count$ | async
+          }}&lt;/div&gt;<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&lt;button
+          (click)="increment()"&gt;増加&lt;/button&gt;<br />
+          &nbsp;&nbsp;`,<br />
+          &nbsp;&nbsp;changeDetection: ChangeDetectionStrategy.OnPush<br />
+          })<br />
+          export class CounterComponent {<br />
+          &nbsp;&nbsp;count$ = this.store.select(selectCount);<br />
+          <br />
+          &nbsp;&nbsp;constructor(private store: Store) {}<br />
+          <br />
+          &nbsp;&nbsp;increment() {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;this.store.dispatch(increment());<br />
+          &nbsp;&nbsp;}<br />
+          }
+        </div>
+        <p>
+          このコンポーネントはOnPushモードを使用していますが、以下の理由で正しく動作します：
+        </p>
+        <ul>
+          <li>store.selectから返されるObservableがデータの変更を通知する</li>
+          <li>asyncパイプが新しい値を受け取ると変更検知がトリガーされる</li>
+          <li>
+            incrementアクションがディスパッチされると、Reducerが新しい状態オブジェクトを作成する
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>変更検知の実装例</h2>
+
+      <div class="code-block">
+        <span class="code-comment">// 簡易的なコンポーネントクラス</span><br />
+        class Component {<br />
+        &nbsp;&nbsp;constructor(name, state = {}) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.state = state;<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.children = [];<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.changeDetectionStrategy = "Default";
+        <span class="code-comment">// 'Default' または 'OnPush'</span><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.inputs = {};
+        <span class="code-comment">// 親からの入力プロパティ</span><br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment">// 子コンポーネントを追加</span
+        ><br />
+        &nbsp;&nbsp;addChild(component) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.children.push(component);<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;return this;<br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment">// OnPush変更検知戦略を設定</span
+        ><br />
+        &nbsp;&nbsp;setOnPush() {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.changeDetectionStrategy = "OnPush";<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;return this;<br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment"
+          >// 入力プロパティを設定（親コンポーネントから）</span
+        ><br />
+        &nbsp;&nbsp;setInput(name, value) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;const oldValue = this.inputs[name];<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.inputs[name] = value;<br />
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+          >// 値が変わったかどうかチェック（参照比較）</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;return oldValue !== value;<br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment"
+          >// コンポーネントのビューを更新（実際のDOM更新をシミュレート）</span
+        ><br />
+        &nbsp;&nbsp;updateView() {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;console.log(`コンポーネント「${this.name}」のビューを更新`);<br />
+        &nbsp;&nbsp;}<br />
+        }
+      </div>
+
+      <div class="note">
+        <h3>重要ポイント</h3>
+        <p>
+          上記のコードは実際のAngularの実装を簡略化したものです。実際のAngularフレームワークではもっと複雑なメカニズムが使われていますが、基本的な概念は同じです。
+        </p>
+      </div>
+
+      <div class="code-block">
+        <span class="code-comment"
+          >// Angularの変更検知機能を簡略化したクラス</span
+        ><br />
+        class ChangeDetector {<br />
+        &nbsp;&nbsp;constructor(rootComponent) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.rootComponent = rootComponent;<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.dirtyComponents = new Set();
+        <span class="code-comment">// 更新が必要なコンポーネント</span><br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment">// 変更検知のサイクルを開始</span
+        ><br />
+        &nbsp;&nbsp;detectChanges() {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;console.log("--- 変更検知サイクル開始 ---");<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this._detectChangesInComponent(this.rootComponent);<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;console.log("--- 変更検知サイクル終了 ---");<br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment"
+          >// 特定のコンポーネントとその子を検査</span
+        ><br />
+        &nbsp;&nbsp;_detectChangesInComponent(component) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;console.log(`${component.name}の変更を検出中...`);<br />
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+          >//
+          OnPushモードの場合、入力プロパティが変わっていない限りスキップ</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;if (<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;component.changeDetectionStrategy
+        === "OnPush" &&<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!this.dirtyComponents.has(component)<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;console.log(`${component.name}はOnPushモードで変更なし
+        - スキップ`);<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return;<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+          >// コンポーネントのビューを更新</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;component.updateView();<br />
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+          >// このコンポーネントの処理が終わったのでリストから削除</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.dirtyComponents.delete(component);<br />
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+          >// 子コンポーネントも再帰的に検査</span
+        ><br />
+        &nbsp;&nbsp;&nbsp;&nbsp;for (const child of component.children) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this._detectChangesInComponent(child);<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br />
+        &nbsp;&nbsp;}<br />
+        <br />
+        &nbsp;&nbsp;<span class="code-comment"
+          >// コンポーネントを「変更あり」としてマーク</span
+        ><br />
+        &nbsp;&nbsp;markForCheck(component) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;this.dirtyComponents.add(component);<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;console.log(`${component.name}に変更あり -
+        次回の検知サイクルでチェック`);<br />
+        &nbsp;&nbsp;}<br />
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2>使用例</h2>
+
+      <div class="code-block">
+        <span class="code-comment">// コンポーネント階層の作成</span><br />
+        const appComponent = new Component("AppComponent", { title:
+        "Angularアプリ" });<br />
+        const counterComponent = new Component("CounterComponent", { count: 0
+        });<br />
+        const displayComponent = new
+        Component("DisplayComponent").setOnPush();<br />
+        const buttonComponent = new Component("ButtonComponent");<br />
+        <br />
+        <span class="code-comment">// コンポーネント階層の構築</span><br />
+        appComponent.addChild(counterComponent);<br />
+        counterComponent.addChild(displayComponent);<br />
+        counterComponent.addChild(buttonComponent);<br />
+        <br />
+        <span class="code-comment">// 変更検知器とNgZoneのセットアップ</span
+        ><br />
+        const changeDetector = new ChangeDetector(appComponent);<br />
+        const ngZone = new NgZone(changeDetector);<br />
+        <br />
+        <span class="code-comment">// 初期変更検知サイクル</span><br />
+        changeDetector.detectChanges();<br />
+      </div>
+
+      <div class="example">
+        <h3>ユーザーイベントのシミュレーション</h3>
+        <div class="code-block">
+          <span class="code-comment"
+            >// ユーザーのクリックイベントをシミュレート</span
+          ><br />
+          console.log("\n--- ボタンクリックイベント ---");<br />
+          ngZone.run(() => {<br />
+          &nbsp;&nbsp;<span class="code-comment">// カウンターの状態を更新</span
+          ><br />
+          &nbsp;&nbsp;counterComponent.state.count++;<br />
+          &nbsp;&nbsp;console.log(`カウント更新:
+          ${counterComponent.state.count}`);<br />
+          <br />
+          &nbsp;&nbsp;<span class="code-comment"
+            >// 入力プロパティの変更（OnPushコンポーネント用）</span
+          ><br />
+          &nbsp;&nbsp;const inputChanged = displayComponent.setInput(<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;"count",<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;counterComponent.state.count<br />
+          &nbsp;&nbsp;);<br />
+          <br />
+          &nbsp;&nbsp;<span class="code-comment"
+            >// 入力が変わったらOnPushコンポーネントをマーク</span
+          ><br />
+          &nbsp;&nbsp;if (inputChanged) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;changeDetector.markForCheck(displayComponent);<br />
+          &nbsp;&nbsp;}<br />
+          });<br />
+          <br />
+          <span class="code-comment">// OnPushモードの最適化例</span><br />
+          console.log("\n--- OnPushの最適化例 ---");<br />
+          ngZone.run(() => {<br />
+          &nbsp;&nbsp;<span class="code-comment"
+            >// 値は変更せず、同じ値を再設定（参照は変わらない）</span
+          ><br />
+          &nbsp;&nbsp;displayComponent.setInput("count",
+          counterComponent.state.count);<br />
+          &nbsp;&nbsp;console.log("同じ値を設定 -
+          OnPushコンポーネントは更新されません");<br />
+          });
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Angularの変更検知のメリットまとめ</h2>
+
+      <ol>
+        <li>
+          <strong>精度:</strong> Zone.jsによって非同期イベントを確実に検出
+        </li>
+        <li>
+          <strong>効率性:</strong> OnPushモードでパフォーマンスを最適化可能
+        </li>
+        <li><strong>制御性:</strong> 変更検知の流れを細かく制御できる</li>
+      </ol>
+
+      <h3>NgRxとの組み合わせ方</h3>
+      <ol>
+        <li><strong>Storeからのデータは常にイミュータブル（不変）</strong></li>
+        <li><strong>コンポーネントはOnPushモードで設定</strong></li>
+        <li>
+          <strong>Selectorで必要なデータだけを取得し、不要な更新を防止</strong>
+        </li>
+      </ol>
+
+      <p>
+        これにより、大規模なAngularアプリケーションでも高いパフォーマンスを維持することができます。
+      </p>
+    </section>
+
+    <div class="note">
+      <h3>ReactとAngularの違い</h3>
+      <p>ReactとAngularでは画面更新のアプローチが根本的に異なります：</p>
+      <ul>
+        <li>
+          <strong>React</strong>: 仮想DOM（Virtual
+          DOM）を使用し、実際のDOMとの差分を計算して最小限の更新を行う
+        </li>
+        <li>
+          <strong>Angular</strong>:
+          Zone.jsを使って変更を検出し、コンポーネントツリーを走査して必要な部分だけを更新する
+        </li>
+      </ul>
+      <p>
+        どちらも効率的なUIの更新を目指していますが、そのアプローチ方法が異なります。
+      </p>
+    </div>
+
+    <footer>
+      <p>© 2025 NgRx学習教材 - Angularの変更検知メカニズム</p>
+    </footer>
+  </body>
+</html>

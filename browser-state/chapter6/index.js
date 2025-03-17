@@ -1,207 +1,203 @@
 /**
- * Chapter 6: 仮想DOM（Virtual DOM）の実装
+ * Chapter 6: Angularの変更検知（Change Detection）の仕組み
  *
- * このファイルでは、ReactやAngularなどのフレームワークで使われている
- * 仮想DOM（Virtual DOM）の簡単な実装例を紹介します。
+ * このファイルでは、Angularで使われている変更検知メカニズムの
+ * 基本的な概念と実装例を紹介します。
  *
- * 仮想DOMとは何か？
- * 簡単に言うと、画面に表示されるHTML要素の設計図のようなものです。
- * JavaScriptのオブジェクトで作られた軽い模型と考えてください。
+ * Angularの変更検知とは何か？
+ * 簡単に言うと、アプリケーションの状態（データ）が変わったときに
+ * それを検出して画面（DOM）を更新する仕組みです。
  *
- * 仮想DOMの働き方（3つのステップ）:
- * 1. アプリの状態（データ）から仮想的な画面の設計図を作る
- * 2. 前の設計図と新しい設計図を比べて、変わった部分を見つける
- * 3. 変わった部分だけを実際の画面（DOM）に反映する
+ * Angularの変更検知の働き方:
+ * 1. イベント発生（ユーザー操作、タイマー、HTTPレスポンスなど）
+ * 2. Zone.jsがイベントをトラップし、Angularに通知
+ * 3. コンポーネントツリーの検査（変更検知）の開始
+ * 4. 変更があったコンポーネントのビューを更新
  *
- * なぜ仮想DOMが便利なの？
+ * なぜAngularの変更検知が効率的か？
  *
- * 【速度アップの秘密】
- * 実際の画面（DOM）を直接変更するのは、とても重い作業です。
- * 例えば、Webページの一部を変更すると、ブラウザは画面の再計算や
- * 再描画をする必要があり、これが遅さの原因になります。
+ * 【Zone.jsとの連携】
+ * AngularはZone.jsというライブラリを使って非同期イベントを
+ * 監視しています。これにより、データが変わる可能性のあるタイミングを
+ * 正確に把握し、必要なときだけ変更検知を実行します。
  *
- * 仮想DOMは、この問題を解決する賢い方法です。例えるなら：
- * 実際の画面を直接書き換えるのは「家全体を建て直す」ようなもの。
- * 仮想DOMを使うと「変更が必要な部屋だけをリフォームする」ように
- * 効率的に画面を更新できます。
+ * 【単方向データフロー】
+ * データは常に親から子へと流れるため、変更が発生したコンポーネントから
+ * その子コンポーネントのみをチェックすればよく、無駄な検査を減らせます。
  *
- * 仮想DOMの3つのメリット：
- * 1. 必要な部分だけを更新するので無駄がない
- * 2. 複数の変更をまとめて一度に反映できる
- * 3. ブラウザの重い処理（再計算や再描画）を減らせる
+ * 【OnPushモード】
+ * デフォルトではすべてのイベント後に検査しますが、OnPushモードを使うと
+ * 入力プロパティが変わった時だけ検査するようになり、さらに効率化できます。
  *
- * 【状態管理との相性】
- * ReduxやNgRxなどの状態管理と仮想DOMを組み合わせると、
- * 大きなアプリでも効率よく画面を更新できます。
- * 
- * 例えるなら、状態管理は「設計変更の指示書」、仮想DOMは
- * 「変更箇所を正確に特定する検査官」のような関係です。
- * この組み合わせで、複雑なアプリでもスムーズな操作感を
+ * Angularの変更検知のメリット：
+ * 1. 予測可能なデータフロー
+ * 2. より細かな変更検知の制御が可能
+ * 3. 大規模アプリケーションでのパフォーマンス最適化
+ *
+ * 【NgRxとの相性】
+ * NgRxなどの状態管理ライブラリと組み合わせると、
+ * イミュータブルなデータフローにより変更検知がさらに効率化されます。
+ *
+ * 例えるなら、NgRxは「状態変更の一元管理システム」、
+ * Angularの変更検知は「その変更に基づいて必要な部分だけを更新する仕組み」
+ * という関係です。この組み合わせで、複雑なアプリでもスムーズな操作感を
  * 実現できます。
  */
 
-// 仮想DOMノードを表す簡易的なクラス
-class VNode {
-  constructor(type, props, children) {
-    this.type = type; // HTML要素の種類（div, span, buttonなど）
-    this.props = props || {}; // 要素の属性（id, class, styleなど）
-    this.children = children || []; // 子要素（他のVNodeまたはテキスト）
+// 簡易的なコンポーネントクラス
+class Component {
+  constructor(name, state = {}) {
+    this.name = name;
+    this.state = state;
+    this.children = [];
+    this.changeDetectionStrategy = "Default"; // 'Default' または 'OnPush'
+    this.inputs = {}; // 親からの入力プロパティ
+  }
+
+  // 子コンポーネントを追加
+  addChild(component) {
+    this.children.push(component);
+    return this;
+  }
+
+  // OnPush変更検知戦略を設定
+  setOnPush() {
+    this.changeDetectionStrategy = "OnPush";
+    return this;
+  }
+
+  // 入力プロパティを設定（親コンポーネントから）
+  setInput(name, value) {
+    const oldValue = this.inputs[name];
+    this.inputs[name] = value;
+
+    // 値が変わったかどうかチェック（参照比較）
+    return oldValue !== value;
+  }
+
+  // コンポーネントのビューを更新（実際のDOM更新をシミュレート）
+  updateView() {
+    console.log(`コンポーネント「${this.name}」のビューを更新`);
   }
 }
 
-// 仮想DOMツリーを生成する関数
-// 状態（state）に基づいて仮想DOMツリーを構築
-function renderVirtualDOM(state) {
-  // 状態に基づいて仮想DOMツリーを生成
-  return new VNode("div", { id: "app" }, [
-    new VNode("h1", {}, [`カウント: ${state.count}`]), // カウント表示
-    new VNode("button", { onClick: "increment()" }, ["増加"]), // 増加ボタン
-    new VNode("button", { onClick: "reset()" }, ["リセット"]), // リセットボタン
-  ]);
-}
-
-// 2つの仮想DOMツリーの差分を計算する関数
-// 簡単に言うと「前の設計図と新しい設計図を比べて、変わった部分を見つける」機能です
-function diff(oldVTree, newVTree) {
-  // 変更点を記録するリスト（「ここが変わりました」というメモのようなもの）
-  const patches = []; 
-
-  // まず、比較する2つの設計図（oldVTreeとnewVTree）が正しく渡されているか確認
-  // もし片方でも設計図がなければ、何も変更点はないと判断
-  if (!oldVTree || !newVTree) {
-    console.log("警告: 比較する設計図（仮想DOM）が見つかりません");
-    return patches;
+// Angularの変更検知機能を簡略化したクラス
+class ChangeDetector {
+  constructor(rootComponent) {
+    this.rootComponent = rootComponent;
+    this.dirtyComponents = new Set(); // 更新が必要なコンポーネント
   }
 
-  // 設計図に子要素の情報がない場合は、空の配列を用意しておく
-  // これは「子供部屋がない家」の場合でも比較できるようにするための準備
-  oldVTree.children = oldVTree.children || [];
-  newVTree.children = newVTree.children || [];
-
-  // 要素の種類が変わった場合（例：divからspanに変更された場合）
-  // 例えるなら「和室が洋室に変わった」場合は、完全に作り直す必要がある
-  if (oldVTree.type !== newVTree.type) {
-    patches.push({ type: "REPLACE", newVTree });
-    return patches;
+  // 変更検知のサイクルを開始
+  detectChanges() {
+    console.log("--- 変更検知サイクル開始 ---");
+    this._detectChangesInComponent(this.rootComponent);
+    console.log("--- 変更検知サイクル終了 ---");
   }
 
-  // 要素の属性（class, style, idなど）が変わったかチェック
-  // 例えるなら「同じ部屋でも、壁紙や床材が変わった」場合
-  if (JSON.stringify(oldVTree.props) !== JSON.stringify(newVTree.props)) {
-    patches.push({ type: "PROPS", props: newVTree.props });
-  }
+  // 特定のコンポーネントとその子を検査
+  _detectChangesInComponent(component) {
+    console.log(`${component.name}の変更を検出中...`);
 
-  // 子要素の変更をチェック（部屋の中の家具や小物が変わったか）
-  // まずは、古い設計図と新しい設計図の両方にある子要素の数を確認
-  const minLength = Math.min(
-    oldVTree.children.length,
-    newVTree.children.length
-  );
-
-  // 両方の設計図にある子要素を一つずつ比較していく
-  for (let i = 0; i < minLength; i++) {
-    // 子要素がテキスト（文字列）の場合
-    // 例えば「こんにちは」というテキストが「さようなら」に変わったかどうか
+    // OnPushモードの場合、入力プロパティが変わっていない限りスキップ
     if (
-      typeof oldVTree.children[i] !== "object" ||
-      typeof newVTree.children[i] !== "object"
+      component.changeDetectionStrategy === "OnPush" &&
+      !this.dirtyComponents.has(component)
     ) {
-      // テキストの内容が変わっていたら記録
-      if (oldVTree.children[i] !== newVTree.children[i]) {
-        patches.push({
-          type: "TEXT_CHANGE",
-          index: i,
-          content: newVTree.children[i],
-        });
-      }
-    } else {
-      // 子要素が単なるテキストではなく、さらに複雑な要素（VNode）の場合
-      // 例えるなら「部屋の中にさらに小部屋がある」ような入れ子構造の場合
-      // その小部屋の中も再帰的に（繰り返し）チェックする
-      const childPatches = diff(oldVTree.children[i], newVTree.children[i]);
-      if (childPatches.length > 0) {
-        patches.push({ type: "CHILD", index: i, patches: childPatches });
-      }
+      console.log(`${component.name}はOnPushモードで変更なし - スキップ`);
+      return;
+    }
+
+    // コンポーネントのビューを更新
+    component.updateView();
+
+    // このコンポーネントの処理が終わったのでリストから削除
+    this.dirtyComponents.delete(component);
+
+    // 子コンポーネントも再帰的に検査
+    for (const child of component.children) {
+      this._detectChangesInComponent(child);
     }
   }
 
-  // 子要素の数が変わった場合の処理
-  if (oldVTree.children.length > newVTree.children.length) {
-    // 子要素が減った場合（例：3つの部屋が2つになった）
-    // 余分な部屋を取り壊す指示を記録
-    patches.push({
-      type: "REMOVE_CHILDREN",
-      startIndex: newVTree.children.length,
-    });
-  } else if (newVTree.children.length > oldVTree.children.length) {
-    // 子要素が増えた場合（例：2つの部屋が3つになった）
-    // 新しい部屋を追加する指示を記録
-    patches.push({
-      type: "ADD_CHILDREN",
-      children: newVTree.children.slice(oldVTree.children.length),
-    });
+  // コンポーネントを「変更あり」としてマーク
+  markForCheck(component) {
+    this.dirtyComponents.add(component);
+    console.log(`${component.name}に変更あり - 次回の検知サイクルでチェック`);
+  }
+}
+
+// Zone.jsの動作を簡略化したシミュレーション
+class NgZone {
+  constructor(changeDetector) {
+    this.changeDetector = changeDetector;
   }
 
-  // すべての変更点をまとめて返す
-  return patches;
+  // イベントをトラップして変更検知を実行
+  run(callback) {
+    console.log("NgZone: イベント検出");
+    callback();
+    console.log("NgZone: 変更検知サイクルをトリガー");
+    this.changeDetector.detectChanges();
+  }
 }
 
-// 差分を実際のDOMに適用する関数
-// 実際のアプリケーションでは、この関数がDOMを更新します
-function patch(domNode, patches) {
-  console.log("DOMに適用される差分:", patches);
-  // 実際のアプリケーションでは、ここで実際のDOM操作を行う
-  // この例では簡略化のため、差分のログ出力のみ行う
-}
+// 使用例 - コンポーネント階層の作成
+const appComponent = new Component("AppComponent", { title: "Angularアプリ" });
+const counterComponent = new Component("CounterComponent", { count: 0 });
+const displayComponent = new Component("DisplayComponent").setOnPush();
+const buttonComponent = new Component("ButtonComponent");
 
-// 使用例 - 初期状態と更新後の状態
-const state1 = { count: 0 }; // 初期状態
-const state2 = { count: 1 }; // 更新後の状態
+// コンポーネント階層の構築
+appComponent.addChild(counterComponent);
+counterComponent.addChild(displayComponent);
+counterComponent.addChild(buttonComponent);
 
-// 初期状態と更新後の状態に基づいて仮想DOMを生成
-const vdom1 = renderVirtualDOM(state1);
-const vdom2 = renderVirtualDOM(state2);
+// 変更検知器とNgZoneのセットアップ
+const changeDetector = new ChangeDetector(appComponent);
+const ngZone = new NgZone(changeDetector);
 
-// 差分を計算
-const patches = diff(vdom1, vdom2);
-console.log("検出された差分:", JSON.stringify(patches, null, 2));
+// 初期変更検知サイクル
+changeDetector.detectChanges();
 
-// 実際のDOMがあれば適用する
-// patch(document.getElementById('app'), patches);
+// ユーザーのクリックイベントをシミュレート
+console.log("\n--- ボタンクリックイベント ---");
+ngZone.run(() => {
+  // カウンターの状態を更新
+  counterComponent.state.count++;
+  console.log(`カウント更新: ${counterComponent.state.count}`);
 
-// 前回の仮想DOMを保存（次回の比較のため）
-let previousVirtualDOM = vdom2;
+  // 入力プロパティの変更（OnPushコンポーネント用）
+  const inputChanged = displayComponent.setInput(
+    "count",
+    counterComponent.state.count
+  );
 
-// UIを更新する関数
-// この関数は、状態が変更されるたびに呼び出されます
-function updateUI(newState) {
-  // 1. 新しい仮想DOMツリーを生成
-  const newVirtualDOM = renderVirtualDOM(newState);
+  // 入力が変わったらOnPushコンポーネントをマーク
+  if (inputChanged) {
+    changeDetector.markForCheck(displayComponent);
+  }
+});
 
-  // 2. 前回の仮想DOMと比較して差分を計算
-  const patches = diff(previousVirtualDOM, newVirtualDOM);
-
-  // 3. 実際のDOMに差分だけを適用（実際のDOMがある場合）
-  // patch(document.getElementById('app'), patches);
-  console.log("UIを更新:", JSON.stringify(patches, null, 2));
-
-  // 4. 新しい仮想DOMを保存（次回の比較のため）
-  previousVirtualDOM = newVirtualDOM;
-}
-
-// 状態を更新してUIを更新する例
-const state3 = { count: 2 };
-updateUI(state3);
+// OnPushモードの最適化例
+console.log("\n--- OnPushの最適化例 ---");
+ngZone.run(() => {
+  // 値は変更せず、同じ値を再設定（参照は変わらない）
+  displayComponent.setInput("count", counterComponent.state.count);
+  console.log("同じ値を設定 - OnPushコンポーネントは更新されません");
+});
 
 /**
- * 仮想DOMのメリットまとめ:
- * 1. 速さ: 画面の必要な部分だけを更新するので動作が速い
- * 2. 書きやすさ: 「こんな画面にしたい」という形で簡単に書ける
- * 3. 管理しやすさ: 複雑なDOM操作を直接書かなくていいので、コードが整理しやすい
+ * Angularの変更検知のメリットまとめ:
+ * 1. 精度: Zone.jsによって非同期イベントを確実に検出
+ * 2. 効率性: OnPushモードでパフォーマンスを最適化可能
+ * 3. 制御性: 変更検知の流れを細かく制御できる
  *
- * この仕組みは、ReactやAngularなどの人気フレームワークの核となる技術で、
- * データの変化に合わせて効率よく画面を更新するために使われています。
- * 
- * 例えるなら、仮想DOMは「効率的なリフォーム計画を立てる建築士」のようなもので、
- * 無駄なく素早く画面を更新する手助けをしてくれます。
+ * NgRxとの組み合わせ方:
+ * 1. Storeからのデータは常にイミュータブル（不変）
+ * 2. コンポーネントはOnPushモードで設定
+ * 3. Selectorで必要なデータだけを取得し、不要な更新を防止
+ *
+ * これにより、大規模なAngularアプリケーションでも高いパフォーマンスを
+ * 維持することができます。
  */
