@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Angularコンポーネントベースの状態管理</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #e7f5ff;
+        padding: 20px;
+        color: #1a3c5e;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background-color: #f8faff;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(41, 105, 176, 0.15);
+        padding: 30px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #194b7a;
+        border-bottom: 2px solid #3d85c6;
+        padding-bottom: 10px;
+      }
+
+      h2 {
+        color: #194b7a;
+        margin: 30px 0 15px;
+        border-left: 4px solid #3d85c6;
+        padding-left: 10px;
+      }
+
+      .diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 40px 0;
+      }
+
+      .component-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 40px;
+        margin: 20px 0;
+      }
+
+      .component {
+        border: 2px solid #2e74b5;
+        border-radius: 8px;
+        overflow: hidden;
+        width: 280px;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(41, 105, 176, 0.1);
+      }
+
+      .component-header {
+        background-color: #2e74b5;
+        color: white;
+        padding: 10px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .component-body {
+        padding: 15px;
+      }
+
+      .component-state {
+        background-color: #dbe9f6;
+        border-radius: 5px;
+        padding: 10px;
+        margin-top: 10px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+
+      .component-methods {
+        margin-top: 15px;
+      }
+
+      .component-method {
+        background-color: #f0f7ff;
+        border-left: 3px solid #2e74b5;
+        padding: 5px 10px;
+        margin-bottom: 5px;
+        font-size: 13px;
+        font-family: monospace;
+      }
+
+      .data-flow {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+      }
+
+      .arrow {
+        position: relative;
+        width: 100px;
+        height: 4px;
+        background-color: #5c93c4;
+        margin: 0 10px;
+      }
+
+      .arrow::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        border-style: solid;
+        border-width: 6px 0 6px 8px;
+        border-color: transparent transparent transparent #5c93c4;
+      }
+
+      .bi-directional::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        border-style: solid;
+        border-width: 6px 8px 6px 0;
+        border-color: transparent #5c93c4 transparent transparent;
+      }
+
+      .data-type {
+        background-color: #dbe9f6;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .service {
+        border: 2px solid #1864ab;
+        border-radius: 8px;
+        width: 280px;
+        background-color: white;
+        box-shadow: 0 4px 8px rgba(41, 105, 176, 0.1);
+        margin: 20px auto;
+      }
+
+      .service-header {
+        background-color: #1864ab;
+        color: white;
+        padding: 10px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .service-body {
+        padding: 15px;
+      }
+
+      .event-emitter {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+      }
+
+      .emitter {
+        background-color: #1971c2;
+        color: white;
+        border-radius: 20px;
+        padding: 10px 20px;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 20px;
+        margin: 30px 0;
+      }
+
+      .feature {
+        background-color: #dbe9f6;
+        border-radius: 8px;
+        padding: 20px;
+        width: 280px;
+        box-shadow: 0 4px 8px rgba(41, 105, 176, 0.1);
+      }
+
+      .feature h3 {
+        color: #194b7a;
+        margin-bottom: 10px;
+        text-align: center;
+        border-bottom: 1px solid #5c93c4;
+        padding-bottom: 5px;
+      }
+
+      .advantages-challenges {
+        display: flex;
+        gap: 30px;
+        margin: 30px 0;
+      }
+
+      .advantages,
+      .challenges {
+        flex: 1;
+        background-color: #dbe9f6;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(41, 105, 176, 0.1);
+      }
+
+      .advantages h3,
+      .challenges h3 {
+        color: #194b7a;
+        margin-bottom: 15px;
+        text-align: center;
+        border-bottom: 1px solid #5c93c4;
+        padding-bottom: 5px;
+      }
+
+      .advantages ul,
+      .challenges ul {
+        padding-left: 20px;
+      }
+
+      .advantages li,
+      .challenges li {
+        margin-bottom: 10px;
+      }
+
+      .code-example {
+        background-color: #194b7a;
+        color: #f0f8ff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 30px 0;
+        font-family: monospace;
+        line-height: 1.5;
+        overflow-x: auto;
+      }
+
+      .code-comment {
+        color: #a3c9e9;
+      }
+
+      .code-keyword {
+        color: #74bdff;
+      }
+
+      .code-function {
+        color: #4dabf7;
+      }
+
+      .code-string {
+        color: #8cd0ff;
+      }
+
+      .importance {
+        margin: 30px 0;
+        padding: 20px;
+        background-color: #dbe9f6;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(41, 105, 176, 0.1);
+      }
+
+      .importance h2 {
+        border-left: none;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .importance-item {
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #a3c9e9;
+      }
+
+      .importance-item:last-child {
+        border-bottom: none;
+      }
+
+      .importance-item h3 {
+        color: #194b7a;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .component-container {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .advantages-challenges {
+          flex-direction: column;
+        }
+
+        .features {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Angularコンポーネントベースの状態管理</h1>
+
+      <div class="diagram">
+        <h2>基本的なコンポーネント構造</h2>
+
+        <div class="component-container">
+          <div class="component">
+            <div class="component-header">CounterComponent</div>
+            <div class="component-body">
+              <div>
+                <strong>状態:</strong>
+                <div class="component-state">{ count: 0 }</div>
+              </div>
+              <div class="component-methods">
+                <div class="component-method">increment()</div>
+                <div class="component-method">decrement()</div>
+                <div class="component-method">reset()</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="component">
+            <div class="component-header">TodoListComponent</div>
+            <div class="component-body">
+              <div>
+                <strong>状態:</strong>
+                <div class="component-state">{ todos: [...], newTodo: "" }</div>
+              </div>
+              <div class="component-methods">
+                <div class="component-method">addTodo()</div>
+                <div class="component-method">toggleTodo(id)</div>
+                <div class="component-method">removeTodo(id)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <h2>親子コンポーネント間のデータフロー</h2>
+
+        <div class="component-container">
+          <div class="component">
+            <div class="component-header">親コンポーネント</div>
+            <div class="component-body">
+              <div>
+                <strong>状態:</strong>
+                <div class="component-state">{ todos: [...] }</div>
+              </div>
+              <div class="component-methods">
+                <div class="component-method">handleToggle(id)</div>
+                <div class="component-method">handleRemove(id)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-flow">
+          <div class="data-type">@Input()</div>
+          <div class="arrow"></div>
+          <div class="data-type">子コンポーネント</div>
+          <div class="arrow bi-directional"></div>
+          <div class="data-type">@Output()</div>
+        </div>
+
+        <div class="component-container">
+          <div class="component">
+            <div class="component-header">TodoItemComponent</div>
+            <div class="component-body">
+              <div>
+                <strong>入力:</strong>
+                <div class="component-state">@Input() todo: {...}</div>
+              </div>
+              <div>
+                <strong>出力:</strong>
+                <div class="component-state">
+                  @Output() toggle = new EventEmitter() @Output() remove = new
+                  EventEmitter()
+                </div>
+              </div>
+              <div class="component-methods">
+                <div class="component-method">onToggle()</div>
+                <div class="component-method">onRemove()</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <h2>サービスを使用した状態管理</h2>
+
+        <div class="service">
+          <div class="service-header">TodoService</div>
+          <div class="service-body">
+            <div>
+              <strong>状態:</strong>
+              <div class="component-state">{ todos: [...] }</div>
+            </div>
+            <div>
+              <strong>イベント:</strong>
+              <div class="component-state">
+                todosChanged = new EventEmitter()
+              </div>
+            </div>
+            <div class="component-methods">
+              <div class="component-method">getTodos()</div>
+              <div class="component-method">addTodo(text)</div>
+              <div class="component-method">toggleTodo(id)</div>
+              <div class="component-method">removeTodo(id)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="event-emitter">
+          <div class="emitter">状態変更通知</div>
+        </div>
+
+        <div class="component-container">
+          <div class="component">
+            <div class="component-header">TodoAppComponent</div>
+            <div class="component-body">
+              <div>
+                <strong>注入:</strong>
+                <div class="component-state">todoService: TodoService</div>
+              </div>
+              <div>
+                <strong>状態:</strong>
+                <div class="component-state">{ todos: [...], newTodo: "" }</div>
+              </div>
+              <div class="component-methods">
+                <div class="component-method">addTodo()</div>
+                <div class="component-method">ngOnDestroy()</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <h3>コンポーネント状態</h3>
+          <p>
+            各コンポーネントが独自の状態を管理します。状態はコンポーネント内のプロパティとして定義されます。
+          </p>
+        </div>
+
+        <div class="feature">
+          <h3>入力と出力</h3>
+          <p>
+            @Input()で親から子へデータを渡し、@Output()で子から親へイベントを発行します。
+          </p>
+        </div>
+
+        <div class="feature">
+          <h3>サービス</h3>
+          <p>
+            複数のコンポーネント間で状態を共有するために依存性注入を使用します。
+          </p>
+        </div>
+
+        <div class="feature">
+          <h3>変更検知</h3>
+          <p>
+            状態が変更されると、Angularの変更検知機能によってUIが自動的に更新されます。
+          </p>
+        </div>
+      </div>
+
+      <div class="advantages-challenges">
+        <div class="advantages">
+          <h3>利点</h3>
+          <ul>
+            <li>
+              <strong>カプセル化:</strong> コンポーネントが自身の状態を管理
+            </li>
+            <li>
+              <strong>再利用性:</strong>
+              状態を持つコンポーネントを複数の場所で使用可能
+            </li>
+            <li>
+              <strong>テスト容易性:</strong>
+              独立したコンポーネントは単体テストが容易
+            </li>
+            <li>
+              <strong>依存性注入:</strong> サービスを通じた状態の共有と管理
+            </li>
+          </ul>
+        </div>
+
+        <div class="challenges">
+          <h3>課題</h3>
+          <ul>
+            <li>
+              <strong>状態の共有:</strong>
+              複数のコンポーネント間での状態共有が複雑になる場合がある
+            </li>
+            <li>
+              <strong>深いコンポーネントツリー:</strong>
+              入力と出力のバケツリレー問題が発生する可能性
+            </li>
+            <li>
+              <strong>複雑な状態ロジック:</strong>
+              大規模アプリケーションでは管理が難しくなる
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="importance">
+        <h2>コンポーネントベース状態管理の重要性</h2>
+
+        <div class="importance-item">
+          <h3>モジュール性と再利用性</h3>
+          <p>
+            コンポーネントベースの状態管理により、UIを独立した再利用可能なコンポーネントに分割できます。各コンポーネントが自身の状態を管理することで、他のコンポーネントに依存せずに機能することができます。
+          </p>
+        </div>
+
+        <div class="importance-item">
+          <h3>関心の分離</h3>
+          <p>
+            各コンポーネントが自身の状態だけを管理することで、関心の分離が実現します。これにより、コードの理解、保守、テストが容易になります。
+          </p>
+        </div>
+
+        <div class="importance-item">
+          <h3>段階的な複雑性</h3>
+          <p>
+            コンポーネントベースの状態管理は、小規模なアプリケーションから始めて、必要に応じて複雑さを増していくことができます。アプリケーションが成長するにつれて、より高度な状態管理パターン（NgRxなど）を導入できます。
+          </p>
+        </div>
+
+        <div class="importance-item">
+          <h3>パフォーマンスの最適化</h3>
+          <p>
+            状態がコンポーネントレベルで管理されることで、状態変更の影響範囲が限定されます。これにより、状態が変更されたときに再レンダリングされるコンポーネントの数を最小限に抑えることができます。
+          </p>
+        </div>
+
+        <div class="importance-item">
+          <h3>開発者体験の向上</h3>
+          <p>
+            コンポーネントベースの状態管理は、直感的で理解しやすいモデルを提供します。特に新しい開発者にとって、コンポーネントと状態の関係を理解しやすく、学習曲線が緩やかになります。
+          </p>
+        </div>
+
+        <div class="importance-item">
+          <h3>グローバル状態管理との補完関係</h3>
+          <p>
+            コンポーネントベースの状態管理は、グローバル状態管理（NgRxなど）と競合するものではなく、補完するものです。適切に組み合わせることで、バランスの取れた設計が可能になります。
+          </p>
+        </div>
+      </div>
+
+      <div class="code-example">
+        <div class="code-comment">// コンポーネントの基本構造</div>
+        <span class="code-keyword">class</span>
+        <span class="code-function">CounterComponent</span>
+        <span class="code-keyword">extends</span> Component {<br />
+        &nbsp;&nbsp;<span class="code-function">constructor</span>() {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">super</span
+        >({...});<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">this</span>.count =
+        0;<br />
+        &nbsp;&nbsp;}<br /><br />
+
+        &nbsp;&nbsp;<span class="code-function">increment</span>() {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">this</span
+        >.count++;<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">this</span
+        >.detectChanges();<br />
+        &nbsp;&nbsp;}<br />
+        }
+      </div>
+    </div>
+  </body>
+</html>
