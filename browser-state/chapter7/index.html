@@ -1267,7 +1267,17 @@
     <div class="cache-simulation">
       <h2>メモ化のキャッシュシミュレーション</h2>
       <p>
-        以下は、fibonacci(5)を計算する際のキャッシュの状態変化を示しています。
+        以下は、fibonacci(5)を計算する際のキャッシュの状態変化を示しています。この表は、メモ化された関数がどのように動作するかを具体的に示しています。
+      </p>
+      <p>
+        <strong>キャッシュミスとキャッシュヒットの概念：</strong>
+      </p>
+      <ul>
+        <li><strong>キャッシュミス（赤色の行）</strong>：その入力値に対する計算結果がまだキャッシュに保存されていないため、実際に計算を行う必要がある状態</li>
+        <li><strong>キャッシュヒット（緑色の行）</strong>：その入力値に対する計算結果が既にキャッシュに保存されているため、再計算せずにキャッシュから結果を取得できる状態</li>
+      </ul>
+      <p>
+        <strong>表の見方：</strong> 各行は関数呼び出しの1ステップを表し、キャッシュの状態がどのように変化していくかを追跡しています。メモ化の効果により、同じ入力値（例：memoizedFib(2)）が複数回呼び出されても、2回目以降はキャッシュから結果を取得するため計算コストが削減されます。
       </p>
 
       <table class="cache-table">
@@ -1330,7 +1340,7 @@
             <td>1</td>
             <td>1 + 0 = 1</td>
           </tr>
-          <tr class="cache-miss">
+          <tr class="cache-hit">
             <td>8</td>
             <td>memoizedFib(1)</td>
             <td>{"1": 1, "0": 0, "2": 1}</td>
@@ -1375,20 +1385,45 @@
         </tbody>
       </table>
 
-      <p>注意点：</p>
-      <ul>
-        <li>
-          <span class="cache-miss">赤色の行</span
-          >はキャッシュミス（計算が必要）を示します
+      <p><strong>シミュレーションの解説：</strong></p>
+      <ol>
+        <li>最初にmemoizedFib(5)が呼ばれると、キャッシュは空なのでキャッシュミスとなります</li>
+        <li>memoizedFib(5)を計算するためにmemoizedFib(4)とmemoizedFib(3)を呼び出す必要があります</li>
+        <li>同様に、memoizedFib(4)、memoizedFib(3)、memoizedFib(2)と再帰的に呼び出されていきます</li>
+        <li>基本ケースのmemoizedFib(1)とmemoizedFib(0)に到達すると、それぞれ1と0を返し、キャッシュに保存します</li>
+        <li>その後、memoizedFib(2)は1+0=1を計算し、キャッシュに保存します</li>
+        <li>ステップ8では、memoizedFib(1)が再度呼ばれますが、既にキャッシュに結果があるため<strong>キャッシュヒット</strong>となり、再計算せずに1を返します</li>
+        <li>同様に、ステップ10と12でもキャッシュヒットが発生し、計算コストが削減されています</li>
+        <li>最終的に、memoizedFib(5)は3+2=5を計算して結果を返します</li>
+      </ol>
+      <p>
+        <strong>計算回数の内訳（合計9回）：</strong>
+      </p>
+      <ol>
+        <li><strong>実際の計算が必要なステップ（6回）</strong>：
+          <ul>
+            <li>ステップ1: memoizedFib(5)の初回呼び出し</li>
+            <li>ステップ2: memoizedFib(4)の初回呼び出し</li>
+            <li>ステップ3: memoizedFib(3)の初回呼び出し</li>
+            <li>ステップ4: memoizedFib(2)の初回呼び出し</li>
+            <li>ステップ5: memoizedFib(1)の初回呼び出し（基本ケース）</li>
+            <li>ステップ6: memoizedFib(0)の初回呼び出し（基本ケース）</li>
+          </ul>
         </li>
-        <li>
-          <span class="cache-hit">緑色の行</span
-          >はキャッシュヒット（計算不要）を示します
+        <li><strong>結果の組み立て計算（3回）</strong>：
+          <ul>
+            <li>ステップ7: memoizedFib(2)の結果計算（1+0=1）</li>
+            <li>ステップ9: memoizedFib(3)の結果計算（1+1=2）</li>
+            <li>ステップ11: memoizedFib(4)の結果計算（2+1=3）</li>
+          </ul>
         </li>
-        <li>
-          通常の再帰では、同じ値に対する計算が繰り返し実行されますが、メモ化では一度計算した値はキャッシュから取得されます
-        </li>
-      </ul>
+      </ol>
+      <p>
+        <strong>注意</strong>：ステップ13（memoizedFib(5)の結果計算）は最終結果の組み立てとして別にカウントしています。
+      </p>
+      <p>
+        <strong>重要なポイント：</strong> 通常の再帰では、同じ値に対する計算が繰り返し実行されますが、メモ化では一度計算した値はキャッシュから取得されるため、大幅な計算コスト削減が実現します。この例では、通常なら15回必要な計算が9回で済んでいます。
+      </p>
     </div>
 
     <div class="benefits">
