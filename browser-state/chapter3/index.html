@@ -323,11 +323,15 @@
         </div>
 
         <div class="code-container">
-          // 参照の変更検知 function hasChanged(oldState, newState) { return
-          oldState !== newState; // 参照が異なれば変更があったと判断 } //
-          テスト用の状態オブジェクト const state1 = { count: 0 }; const state2 =
-          { count: 0 }; // 内容は同じだが異なるオブジェクト（異なる参照） const
-          state3 = state1; // state1と同じ参照
+          // 参照の変更検知 
+          function hasChanged(oldState, newState) { 
+            return oldState !== newState; // 参照が異なれば変更があったと判断 
+          } 
+          
+          // テスト用の状態オブジェクト 
+          const state1 = { count: 0 }; 
+          const state2 = { count: 0 }; // 内容は同じだが異なるオブジェクト（異なる参照） 
+          const state3 = state1; // state1と同じ参照
         </div>
 
         <div class="memory-diagram">
@@ -418,12 +422,21 @@
         </div>
 
         <div class="code-container">
-          // 簡易的なディープ比較 function isEqual(obj1, obj2) { return
-          JSON.stringify(obj1) === JSON.stringify(obj2); // 注意:
-          これは簡易的な実装で、循環参照や関数を含むオブジェクトでは動作しません
-          } // ネストされたオブジェクトを含む状態 const state4 = { count: 0,
-          user: { name: "Alice" } }; const state5 = { count: 0, user: { name:
-          "Alice" } }; // 内容は同じだが異なるオブジェクト
+          // 簡易的なディープ比較 
+          function isEqual(obj1, obj2) { 
+            return JSON.stringify(obj1) === JSON.stringify(obj2); 
+            // 注意: これは簡易的な実装で、循環参照や関数を含むオブジェクトでは動作しません
+          } 
+          
+          // ネストされたオブジェクトを含む状態 
+          const state4 = { 
+            count: 0,
+            user: { name: "Alice" } 
+          }; 
+          const state5 = { 
+            count: 0, 
+            user: { name: "Alice" } 
+          }; // 内容は同じだが異なるオブジェクト
         </div>
 
         <div class="memory-diagram">
@@ -580,18 +593,58 @@
         </table>
 
         <div class="code-container">
-          // Reduxリデューサーの例（イミュータブルな更新） function
-          counterReducer(state = { count: 0 }, action) { switch (action.type) {
-          case 'INCREMENT': return { ...state, // 既存のプロパティをコピー
-          count: state.count + 1 //
-          新しい値で上書き（新しいオブジェクト参照を作成） }; default: return
-          state; } }
+          // Reduxリデューサーの例（イミュータブルな更新） 
+          function counterReducer(state = { count: 0 }, action) { 
+            switch (action.type) {
+              case 'INCREMENT': 
+                return { 
+                  ...state, // 既存のプロパティをコピー
+                  count: state.count + 1 // 新しい値で上書き（新しいオブジェクト参照を作成）
+                }; 
+              default: 
+                return state; 
+            } 
+          }
+        </div>
+
+        <div class="explanation" style="margin-top: 20px">
+          <p><strong>リセレクト/NgRxセレクタの等価性チェックとは？</strong></p>
+          <p>
+            リセレクト（Reselect）はRedux用のセレクタライブラリで、NgRxセレクタはAngular用の状態管理ライブラリNgRxの同様の機能です。これらは以下の特徴を持ちます：
+          </p>
+          <ul>
+            <li><strong>メモ化（キャッシュ）機能</strong>：同じ入力に対して計算を繰り返さないようにします</li>
+            <li><strong>等価性チェック</strong>：入力値が前回と「同じ」かどうかを判断するための比較処理</li>
+            <li><strong>デフォルトは参照比較</strong>：通常は <code>===</code> 演算子を使用して参照が同じかどうかをチェック</li>
+            <li><strong>カスタマイズ可能</strong>：特定のユースケースでは、独自の比較関数を提供できます（例：深い比較や特定のプロパティのみの比較）</li>
+          </ul>
+          <p>
+            <strong>例</strong>：ユーザー一覧から特定の条件でフィルタリングする場合、入力（ユーザー一覧と条件）が変わっていなければ、再計算せずに前回の結果を返します。これにより、パフォーマンスが向上します。
+          </p>
         </div>
 
         <div class="summary-box">
           <div class="summary-title">Redux/NgRxの変更検知フロー</div>
           <ol>
-            <li>アクションがディスパッチされる</li>
+            <li>
+              アクションがディスパッチされる
+              <div style="margin: 10px 0 15px 0; padding: 15px; background-color: #f5f5f5; border-left: 3px solid #2196f3; font-size: 0.9em;">
+                <strong>アクションがディスパッチされるとは？</strong><br>
+                「アクションがディスパッチされる」とは、コンポーネントやサービスからストア（Store）に対してアクションオブジェクトが送信されるプロセスです。<br><br>
+                
+                <strong>具体的な流れ：</strong>
+                <ol style="margin-top: 5px; margin-bottom: 5px;">
+                  <li>コンポーネントで何らかのイベント（ボタンクリックなど）が発生</li>
+                  <li>そのイベントに対応するアクションオブジェクトが作成される</li>
+                  <li><code>store.dispatch(action)</code>メソッドを使ってアクションがストアに送信される</li>
+                </ol>
+                
+                <strong>例：</strong><br>
+                <code>this.store.dispatch(TodoActions.addTodo({ title: "買い物に行く" }));</code><br><br>
+                
+                このディスパッチにより、アクションオブジェクトがストアに送られ、すべてのリデューサーがこのアクションを受け取って処理するかどうかを判断します。これが状態変更の最初のステップとなります。
+              </div>
+            </li>
             <li>
               リデューサーが実行され、新しい状態オブジェクトを返す（イミュータブルな更新）
             </li>
