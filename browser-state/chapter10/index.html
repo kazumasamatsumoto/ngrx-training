@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NgRx Store Visualization</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Meiryo", sans-serif;
+        background-color: #f5f9ff;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 32px;
+      }
+      h2 {
+        color: #1976d2;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        font-size: 24px;
+        border-bottom: 2px solid #bbdefb;
+        padding-bottom: 10px;
+      }
+
+      /* Store概念図のスタイル */
+      .store-concept {
+        display: flex;
+        justify-content: center;
+        margin: 40px 0;
+      }
+      .store-box {
+        background-color: #e3f2fd;
+        border: 3px solid #1976d2;
+        border-radius: 15px;
+        width: 70%;
+        overflow: hidden;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      }
+      .store-header {
+        background-color: #1976d2;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+      }
+      .store-content {
+        padding: 20px;
+      }
+      .state-container {
+        background-color: white;
+        border: 2px solid #64b5f6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .state-title {
+        font-weight: bold;
+        color: #1565c0;
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
+      .state-code {
+        background-color: #f5f5f5;
+        border-radius: 5px;
+        padding: 10px;
+        font-family: monospace;
+        overflow-x: auto;
+      }
+
+      /* Storeの責務 */
+      .responsibilities {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .responsibility-item {
+        background-color: #e1f5fe;
+        border-left: 5px solid #03a9f4;
+        border-radius: 5px;
+        padding: 15px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      .responsibility-title {
+        font-weight: bold;
+        color: #0277bd;
+        margin-bottom: 10px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+      }
+      .responsibility-title .icon {
+        margin-right: 10px;
+        font-size: 24px;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #03a9f4;
+        color: white;
+        border-radius: 50%;
+      }
+      .responsibility-desc {
+        color: #01579b;
+        line-height: 1.5;
+      }
+
+      /* ストアのフロー図 */
+      .flow-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 40px 0;
+      }
+      .flow-step {
+        width: 80%;
+        margin-bottom: 30px;
+        position: relative;
+      }
+      .flow-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .flow-number {
+        width: 36px;
+        height: 36px;
+        background-color: #1976d2;
+        color: white;
+        font-weight: bold;
+        font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+      .flow-title {
+        font-weight: bold;
+        color: #1565c0;
+        font-size: 20px;
+      }
+      .flow-content {
+        background-color: #e3f2fd;
+        border: 2px solid #64b5f6;
+        border-radius: 10px;
+        padding: 15px;
+      }
+      .flow-code {
+        background-color: #f8f9fa;
+        border: 1px solid #dadce0;
+        border-radius: 5px;
+        padding: 10px;
+        font-family: monospace;
+        margin: 10px 0;
+      }
+      .flow-arrow {
+        height: 30px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+      }
+      .flow-arrow::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 20px solid #1976d2;
+      }
+      .flow-arrow::before {
+        content: "";
+        position: absolute;
+        top: -30px;
+        width: 3px;
+        height: 30px;
+        background-color: #1976d2;
+      }
+
+      /* Observable データフロー */
+      .observable-flow {
+        width: 100%;
+        margin: 40px 0;
+        position: relative;
+      }
+      .observable-timeline {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .timeline-event {
+        background-color: #e8eaf6;
+        border: 2px solid #3f51b5;
+        border-radius: 10px;
+        padding: 15px;
+        width: 28%;
+        position: relative;
+        text-align: center;
+      }
+      .timeline-event::after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 15px solid #3f51b5;
+      }
+      .timeline-event h4 {
+        color: #303f9f;
+        margin: 0 0 10px 0;
+      }
+      .timeline-pipe {
+        position: relative;
+        height: 20px;
+        background-color: #c5cae9;
+        border-radius: 10px;
+        margin: 20px 0;
+      }
+      .timeline-arrow {
+        position: absolute;
+        right: -15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 10px solid transparent;
+        border-left: 15px solid #c5cae9;
+      }
+      .subscribers {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 30px;
+      }
+      .subscriber {
+        background-color: #fff3e0;
+        border: 2px solid #ff9800;
+        border-radius: 10px;
+        padding: 15px;
+        width: 45%;
+        position: relative;
+      }
+      .subscriber::before {
+        content: "";
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 15px solid #ff9800;
+      }
+      .subscriber h4 {
+        color: #e65100;
+        margin: 0 0 10px 0;
+        text-align: center;
+      }
+      .subscriber-content {
+        background-color: #fff;
+        border-radius: 5px;
+        padding: 10px;
+        font-family: monospace;
+      }
+
+      /* メリット */
+      .benefits {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .benefit {
+        background-color: #e8f5e9;
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .benefit-icon {
+        font-size: 40px;
+        margin-bottom: 15px;
+        color: #4caf50;
+      }
+      .benefit-title {
+        font-weight: bold;
+        color: #2e7d32;
+        margin-bottom: 10px;
+        font-size: 18px;
+        text-align: center;
+      }
+      .benefit-desc {
+        color: #1b5e20;
+        text-align: center;
+        line-height: 1.5;
+      }
+
+      /* 重要なポイント */
+      .key-points {
+        background-color: #e8eaf6;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 30px 0;
+      }
+      .key-points h3 {
+        color: #303f9f;
+        margin-top: 0;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .key-point-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+      }
+      .key-point {
+        background-color: white;
+        border-left: 4px solid #3f51b5;
+        border-radius: 5px;
+        padding: 15px;
+      }
+      .key-point-title {
+        font-weight: bold;
+        color: #303f9f;
+        margin-bottom: 8px;
+      }
+      .key-point-desc {
+        color: #1a237e;
+        font-size: 14px;
+      }
+
+      .code-keyword {
+        color: #0033b3;
+        font-weight: bold;
+      }
+      .code-function {
+        color: #7d5bbf;
+      }
+      .code-string {
+        color: #008000;
+      }
+      .code-number {
+        color: #1750eb;
+      }
+      .code-comment {
+        color: #808080;
+        font-style: italic;
+      }
+      .code-property {
+        color: #871094;
+      }
+      .code-operator {
+        color: #5c5c5c;
+      }
+      .code-bracket {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>NgRx ストア（Store）の仕組み</h1>
+
+      <div class="store-concept">
+        <div class="store-box">
+          <div class="store-header">
+            Store: アプリケーション状態の中央リポジトリ
+          </div>
+          <div class="store-content">
+            <div class="state-container">
+              <div class="state-title">
+                単一の状態ツリー (Single State Tree)
+              </div>
+              <div class="state-code">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">users</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[...]</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">products</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[...]</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">auth</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">loggedIn</span
+                ><span class="code-operator">:</span>
+                <span class="code-keyword">true</span>,
+                <span class="code-property">user</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{...}</span>
+                <span class="code-bracket">}</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">ui</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">theme</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">'dark'</span>,
+                <span class="code-property">sidenavOpen</span
+                ><span class="code-operator">:</span>
+                <span class="code-keyword">false</span>
+                <span class="code-bracket">}</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">router</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">url</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">'/dashboard'</span>
+                <span class="code-bracket">}</span><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>ストアの主な責務</h2>
+      <div class="responsibilities">
+        <div class="responsibility-item">
+          <div class="responsibility-title">
+            <div class="icon">1</div>
+            状態の保持
+          </div>
+          <div class="responsibility-desc">
+            アプリケーションの状態を単一のオブジェクトとして保持します。これにより、状態の一貫性と予測可能性が向上します。
+          </div>
+        </div>
+        <div class="responsibility-item">
+          <div class="responsibility-title">
+            <div class="icon">2</div>
+            状態の更新
+          </div>
+          <div class="responsibility-desc">
+            アクションをディスパッチすることで状態を更新します。直接的な変更は許可されず、すべての変更は明示的なアクションを通じて行われます。
+          </div>
+        </div>
+        <div class="responsibility-item">
+          <div class="responsibility-title">
+            <div class="icon">3</div>
+            変更通知
+          </div>
+          <div class="responsibility-desc">
+            状態が変更されたときに、RxJSのObservableを通じて通知します。これにより、UIコンポーネントは最新の状態を自動的に反映できます。
+          </div>
+        </div>
+        <div class="responsibility-item">
+          <div class="responsibility-title">
+            <div class="icon">4</div>
+            状態の取得
+          </div>
+          <div class="responsibility-desc">
+            セレクターを通じて状態の特定の部分を取得します。これにより、必要なデータだけを効率的に取得できます。
+          </div>
+        </div>
+      </div>
+
+      <h2>ストアの基本的な実装</h2>
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <div class="flow-header">
+            <div class="flow-number">1</div>
+            <div class="flow-title">ストアクラスの定義</div>
+          </div>
+          <div class="flow-content">
+            <p>
+              ストアは状態を保持するBehaviorSubjectとそれを操作するためのメソッドを提供します。
+            </p>
+            <div class="flow-code">
+              <span class="code-keyword">class</span>
+              <span class="code-function">Store</span>
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-function">constructor</span
+              >(initialState) <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// 状態を保持するBehaviorSubject</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">this</span
+              >.state$ = <span class="code-keyword">new</span>
+              <span class="code-function">BehaviorSubject</span
+              >(initialState);<br />
+              &nbsp;&nbsp;<span class="code-bracket">}</span><br />
+              <br />
+              &nbsp;&nbsp;<span class="code-comment"
+                >// その他のメソッド...</span
+              ><br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-arrow"></div>
+
+        <div class="flow-step">
+          <div class="flow-header">
+            <div class="flow-number">2</div>
+            <div class="flow-title">セレクターメソッドの実装</div>
+          </div>
+          <div class="flow-content">
+            <p>
+              セレクターは状態から特定のデータを取得し、変更があったときのみ新しい値を通知します。
+            </p>
+            <div class="flow-code">
+              <span class="code-function">select</span>(selectorFn)
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-keyword">return</span>
+              <span class="code-keyword">this</span>.state$.pipe(<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function">map</span
+              >(selectorFn),<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-function"
+                >distinctUntilChanged</span
+              >()<br />
+              &nbsp;&nbsp;);<br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-arrow"></div>
+
+        <div class="flow-step">
+          <div class="flow-header">
+            <div class="flow-number">3</div>
+            <div class="flow-title">状態の取得と更新</div>
+          </div>
+          <div class="flow-content">
+            <p>
+              現在の状態を取得するメソッドと、状態を更新するメソッドを提供します。
+            </p>
+            <div class="flow-code">
+              <span class="code-comment">// 現在の状態を取得</span><br />
+              <span class="code-function">getState</span>()
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-keyword">return</span>
+              <span class="code-keyword">this</span>.state$.getValue();<br />
+              <span class="code-bracket">}</span><br />
+              <br />
+              <span class="code-comment">// 状態を更新</span><br />
+              <span class="code-function">setState</span>(newState)
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;console.log(<span class="code-string"
+                >"状態を更新:"</span
+              >, newState);<br />
+              &nbsp;&nbsp;<span class="code-keyword">this</span
+              >.state$.next(newState);<br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Observable データフロー</h2>
+      <div class="observable-flow">
+        <div class="observable-timeline">
+          <div class="timeline-event">
+            <h4>状態の初期化</h4>
+            <div><span class="code-bracket">{ count: 0 }</span></div>
+          </div>
+          <div class="timeline-event">
+            <h4>アクションのディスパッチ</h4>
+            <div>
+              <span class="code-function">setState</span>(<span
+                class="code-bracket"
+                >{ count: 1 }</span
+              >)
+            </div>
+          </div>
+          <div class="timeline-event">
+            <h4>新しい状態</h4>
+            <div><span class="code-bracket">{ count: 1 }</span></div>
+          </div>
+        </div>
+
+        <div class="timeline-pipe">
+          <div class="timeline-arrow"></div>
+        </div>
+
+        <div class="subscribers">
+          <div class="subscriber">
+            <h4>UIコンポーネント</h4>
+            <div class="subscriber-content">
+              <span class="code-comment">// Angularテンプレート</span><br />
+              &lt;div&gt;{{ count$ | async }}&lt;/div&gt;<br /><br />
+              <span class="code-comment">// コンポーネントクラス</span><br />
+              <span class="code-keyword">this</span>.count$ = store.<span
+                class="code-function"
+                >select</span
+              >(state => state.count);
+            </div>
+          </div>
+          <div class="subscriber">
+            <h4>その他のサブスクライバー</h4>
+            <div class="subscriber-content">
+              <span class="code-comment">// ログ記録</span><br />
+              store.<span class="code-function">select</span>(state => state)<br />
+              &nbsp;&nbsp;.<span class="code-function">subscribe</span>(state =>
+              {<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;console.log(<span class="code-string"
+                >`新しい状態: ${JSON.stringify(state)}`</span
+              >);<br />
+              &nbsp;&nbsp;});
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>ストアパターンのメリット</h2>
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-icon">📊</div>
+          <div class="benefit-title">単一の信頼できる情報源</div>
+          <div class="benefit-desc">
+            状態が単一の場所で管理されるため、データの同期や整合性の問題が解消されます。デバッグが容易になり、状態の変化を明確に追跡できます。
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">⚡</div>
+          <div class="benefit-title">リアクティブな状態管理</div>
+          <div class="benefit-desc">
+            RxJSのObservableを使用することで、状態の変更に自動的に反応するUIを実現できます。非同期パイプを使用して簡単にバインディングできます。
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🔄</div>
+          <div class="benefit-title">予測可能な状態遷移</div>
+          <div class="benefit-desc">
+            すべての状態変更がアクションによって行われるため、アプリケーションの動作が予測しやすくなります。デバッグツールを使用して状態の変化を時系列で追跡できます。
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-icon">🧩</div>
+          <div class="benefit-title">関心の分離</div>
+          <div class="benefit-desc">
+            状態管理ロジックとUIロジックが明確に分離されるため、コードの保守性とテスト容易性が向上します。各部分を独立して開発・テストできます。
+          </div>
+        </div>
+      </div>
+
+      <div class="key-points">
+        <h3>NgRxストアの重要なポイント</h3>
+        <div class="key-point-list">
+          <div class="key-point">
+            <div class="key-point-title">単一の状態ツリー</div>
+            <div class="key-point-desc">
+              アプリケーションの状態は単一のオブジェクトとして保持され、すべてのデータが一箇所に集約されます。
+            </div>
+          </div>
+          <div class="key-point">
+            <div class="key-point-title">読み取り専用の状態</div>
+            <div class="key-point-desc">
+              状態は直接変更できず、アクションをディスパッチすることでのみ変更可能です。これにより不測の変更を防ぎます。
+            </div>
+          </div>
+          <div class="key-point">
+            <div class="key-point-title">リアクティブプログラミング</div>
+            <div class="key-point-desc">
+              RxJSのObservableを使用して状態の変更を監視し、UIを自動的に更新します。非同期処理も簡単に統合できます。
+            </div>
+          </div>
+          <div class="key-point">
+            <div class="key-point-title">セレクター</div>
+            <div class="key-point-desc">
+              状態から特定のデータを効率的に取得するための関数。メモ化により不要な再計算を防ぎます。
+            </div>
+          </div>
+          <div class="key-point">
+            <div class="key-point-title">サブスクリプション管理</div>
+            <div class="key-point-desc">
+              コンポーネントのライフサイクルに合わせてサブスクリプションを解除し、メモリリークを防ぎます。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
