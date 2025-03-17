@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromiumとレンダリングプロセス解説</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* 最新のAngularロゴ用のスタイル */
+        .angular-logo-svg {
+            width: 1em;
+            height: 1em;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        h2 .angular-logo-svg {
+            width: 1.2em;
+            height: 1.2em;
+        }
+        .relation-icon .angular-logo-svg,
+        .card-icon .angular-logo-svg {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fab fa-edge"></i>
+            <h1>Chromiumとレンダリングプロセス解説</h1>
+        </div>
+    </header>
+
+    <main>
+        <section id="chromium-rendering">
+            <h2>
+                <img src="image.png" alt="Chromium Logo" class="chromium-logo">
+                1. Chromiumのレンダリングと<span class="highlight">JavaScript実行</span>
+            </h2>
+            
+            <div class="content-box">
+                <h3>Chromiumの構成要素</h3>
+                <div class="diagram-container">
+                    <div class="diagram">
+                        <div class="chromium-box">
+                            <div class="title">Chromium</div>
+                            <div class="components">
+                                <div class="component blink">
+                                    <div class="component-title">Blink</div>
+                                    <div class="component-desc">レンダリングエンジン</div>
+                                    <ul>
+                                        <li>HTML/CSSのパース</li>
+                                        <li>レンダーツリーの構築</li>
+                                        <li>レイアウト計算</li>
+                                        <li>ペイント</li>
+                                        <li>コンポジット（GPU活用）</li>
+                                    </ul>
+                                </div>
+                                <div class="component v8">
+                                    <div class="component-title">V8</div>
+                                    <div class="component-desc">JavaScript実行エンジン</div>
+                                    <ul>
+                                        <li>Chrome, Edge, Operaで利用</li>
+                                        <li>Node.jsでも採用</li>
+                                        <li>高速なJavaScript実行</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>レンダリングパイプラインの流れ</h3>
+                <div class="pipeline-diagram">
+                    <div class="pipeline-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>HTML/CSSのパース</h4>
+                            <p>HTMLは字句解析と構文解析を経てDOMツリー、CSSはCSSOMを生成</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow"><i class="fas fa-arrow-down"></i></div>
+                    <div class="pipeline-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>レンダーツリーの構築</h4>
+                            <p>DOMとCSSOMを組み合わせ、表示に必要なレンダーツリーを作成</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow"><i class="fas fa-arrow-down"></i></div>
+                    <div class="pipeline-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>レイアウト計算</h4>
+                            <p>変更があった部分のみ局所的に再計算（再フロー）</p>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow"><i class="fas fa-arrow-down"></i></div>
+                    <div class="pipeline-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>ペイントとコンポジット</h4>
+                            <p>変更された部分だけ再描画し、GPUによる高速合成で最終表示</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="angular-rendering">
+            <h2>
+                <img src="angular_gradient.png" alt="Angular Logo" class="angular-logo">
+                2. Angularのレンダリングと<span class="highlight">状態管理</span>
+            </h2>
+            
+            <div class="content-box">
+                <div class="two-column">
+                    <div class="column">
+                        <h3>実DOMへの直接更新</h3>
+                        <div class="info-box">
+                            <p>Angularは仮想DOMを使わず、コンポーネント単位での状態変化を検知し、必要な箇所だけ実際のDOMに直接変更を適用します。</p>
+                            <p>これにより、Zone.jsや最新のSignalsなどを用いて、変更があったコンポーネントのみ効率的に更新できます。</p>
+                        </div>
+                    </div>
+                    <div class="column">
+                        <div class="diagram">
+                            <div class="angular-update-flow">
+                                <div class="state-change">状態変更</div>
+                                <div class="arrow"><i class="fas fa-arrow-down"></i></div>
+                                <div class="change-detection">変更検知<br>(Zone.js/Signals)</div>
+                                <div class="arrow"><i class="fas fa-arrow-down"></i></div>
+                                <div class="dom-update">実DOMの直接更新<br>(コンポーネント単位)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>状態管理の手法</h3>
+                <div class="state-management">
+                    <div class="state-method rxjs">
+                        <div class="method-icon"><i class="fas fa-stream"></i></div>
+                        <h4>RxJS / NgRx</h4>
+                        <p>Observableを利用して非同期処理やデータの流れを管理</p>
+                    </div>
+                    <div class="state-method signals">
+                        <div class="method-icon"><i class="fas fa-broadcast-tower"></i></div>
+                        <h4>Signals</h4>
+                        <p>Angular 16以降で導入された新しい仕組み。状態変更をシンプルかつ効率的に検知し、必要な再描画をトリガー</p>
+                    </div>
+                </div>
+
+                <h3>更新の連携</h3>
+                <div class="update-flow-diagram">
+                    <div class="flow-item">状態変更</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item">Angular DOM更新</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item">Blink エンジンへ</div>
+                    <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flow-item">局所的な再レイアウト・再ペイント</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="v8-engine">
+            <h2>
+                <img src="v8.png" alt="V8 Engine Logo" class="v8-logo-img">
+                3. V8エンジンの<span class="highlight">役割と利用場所</span>
+            </h2>
+            
+            <div class="content-box">
+                <h3>V8エンジンとは？</h3>
+                <p class="intro-text">V8は、Googleが開発した高速なJavaScript実行エンジンです。</p>
+
+                <div class="v8-usage-diagram">
+                    <div class="v8-center">
+                        <img src="v8.png" alt="V8 Engine Logo" class="v8-logo-img center-logo">
+                        <div class="v8-desc">JavaScript実行エンジン</div>
+                    </div>
+                    <div class="v8-applications">
+                        <div class="v8-app browser">
+                            <div class="app-icon"><i class="fas fa-globe"></i></div>
+                            <h4>ブラウザ上での実行</h4>
+                            <ul>
+                                <li>Google Chrome</li>
+                                <li>Microsoft Edge</li>
+                                <li>Opera</li>
+                            </ul>
+                            <p>ブラウザ内でAngularや他のフレームワークが生成するJavaScriptコードを実行</p>
+                        </div>
+                        <div class="v8-app server">
+                            <div class="app-icon"><i class="fas fa-server"></i></div>
+                            <h4>サーバーサイド実行</h4>
+                            <ul>
+                                <li>Node.js</li>
+                            </ul>
+                            <p>サーバー上でJavaScriptアプリケーションを動作させるために利用</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>AngularアプリとV8</h3>
+                <div class="angular-v8-relation">
+                    <div class="relation-item">
+                        <div class="relation-icon">
+                            <img src="angular_gradient.png" alt="Angular Logo" class="angular-logo">
+                        </div>
+                        <div class="relation-text">
+                            <p>Angularで書かれたコード（TypeScriptで記述されコンパイルされたJavaScript）は、V8によって実行されます。</p>
+                            <p>これにより、Angularアプリケーションのロジックや変更検知、データバインディングなどが高速に実行され、結果としてユーザーにはスムーズなUIが提供されます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="overall-performance">
+            <h2><i class="fas fa-tachometer-alt"></i> 4. 全体の連携と<span class="highlight">パフォーマンス向上</span></h2>
+            
+            <div class="content-box">
+                <h3>AngularとChromiumの連携</h3>
+                <div class="cooperation-diagram">
+                    <div class="cooperation-flow">
+                        <div class="flow-box angular">
+                            <h4>Angular</h4>
+                            <ul>
+                                <li>状態管理</li>
+                                <li>変更検知</li>
+                                <li>DOM更新</li>
+                            </ul>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <div class="flow-box chromium">
+                            <h4>Chromium (Blink)</h4>
+                            <ul>
+                                <li>局所的な再レイアウト</li>
+                                <li>局所的な再ペイント</li>
+                            </ul>
+                        </div>
+                        <div class="flow-arrow"><i class="fas fa-arrow-right"></i></div>
+                        <div class="flow-box result">
+                            <h4>結果</h4>
+                            <ul>
+                                <li>変更箇所のみ更新</li>
+                                <li>全体のパフォーマンス最適化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>V8エンジンの貢献</h3>
+                <div class="v8-contribution">
+                    <div class="contribution-icon"><i class="fas fa-rocket"></i></div>
+                    <div class="contribution-text">
+                        <p>AngularアプリケーションのJavaScriptコードは、V8によって実行されるため、アプリケーションロジックが迅速に評価され、ユーザーの操作に対して即座に反応できる環境が整っています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="summary">
+            <h2><i class="fas fa-clipboard-list"></i> まとめ</h2>
+            
+            <div class="content-box">
+                <div class="summary-cards">
+                    <div class="summary-card chromium">
+                        <div class="card-icon">
+                            <img src="image.png" alt="Chromium Logo" class="chromium-logo">
+                        </div>
+                        <h3>Chromium</h3>
+                        <p>オープンソースプロジェクトとして、Blinkレンダリングエンジンと V8 JavaScriptエンジンを提供。HTML/CSSのパース、レンダーツリー生成、局所的なレイアウト再計算、GPUを活用したペイント・コンポジットにより、効率的な画面描画を実現します。</p>
+                    </div>
+                    <div class="summary-card angular">
+                        <div class="card-icon">
+                            <img src="angular_gradient.png" alt="Angular Logo" class="angular-logo">
+                        </div>
+                        <h3>Angular</h3>
+                        <p>Zone.js、RxJS、Signalsなどを利用して、状態管理と変更検知を行い、必要な部分のみを実DOMに直接更新。更新されたDOMはChromiumに引き渡され、変更箇所だけが再描画されるため、全体のパフォーマンスが向上します。</p>
+                    </div>
+                    <div class="summary-card v8">
+                        <div class="card-icon">
+                            <img src="v8.png" alt="V8 Engine Logo" class="v8-logo-img">
+                        </div>
+                        <h3>V8エンジン</h3>
+                        <p>Chromiumの一部として、ブラウザ上でAngularアプリケーションを含むJavaScriptコードを高速に実行。さらに、Node.jsでも採用されるなど、サーバーサイドでも利用されています。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Chromiumとレンダリングプロセス解説</p>
+    </footer>
+</body>
+</html>
