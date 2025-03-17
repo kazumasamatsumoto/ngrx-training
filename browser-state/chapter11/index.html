@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NgRx Reducer Visualization</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Meiryo", sans-serif;
+        background-color: #f5f9ff;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 32px;
+      }
+      h2 {
+        color: #1976d2;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        font-size: 24px;
+        border-bottom: 2px solid #bbdefb;
+        padding-bottom: 10px;
+      }
+
+      /* リデューサー基本概念図 */
+      .reducer-concept {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 40px 0;
+        position: relative;
+      }
+      .reducer-diagram {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 40px;
+      }
+      .state-box,
+      .action-box,
+      .new-state-box {
+        border-radius: 10px;
+        padding: 20px;
+        width: 25%;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .state-box {
+        background-color: #e3f2fd;
+        border: 2px solid #2196f3;
+      }
+      .action-box {
+        background-color: #f3e5f5;
+        border: 2px solid #9c27b0;
+      }
+      .new-state-box {
+        background-color: #e8f5e9;
+        border: 2px solid #4caf50;
+      }
+      .box-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      .state-title {
+        color: #1565c0;
+      }
+      .action-title {
+        color: #6a1b9a;
+      }
+      .new-state-title {
+        color: #2e7d32;
+      }
+      .box-content {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 5px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      .reducer-function {
+        background-color: #fff3e0;
+        border: 2px solid #ff9800;
+        border-radius: 10px;
+        padding: 20px;
+        width: 25%;
+        margin: 0 20px;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .reducer-title {
+        font-weight: bold;
+        color: #e65100;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      .reducer-code {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 5px;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 14px;
+      }
+      .arrow {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .arrow-icon {
+        font-size: 24px;
+        color: #757575;
+      }
+
+      /* リデューサーの特徴 */
+      .features {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin: 30px 0;
+      }
+      .feature {
+        background-color: #e1f5fe;
+        border-radius: 10px;
+        padding: 20px;
+        width: 45%;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .feature-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .feature-icon {
+        font-size: 30px;
+        margin-right: 15px;
+        width: 50px;
+        text-align: center;
+      }
+      .feature-title {
+        font-weight: bold;
+        color: #0277bd;
+        font-size: 18px;
+      }
+      .feature-desc {
+        color: #01579b;
+        line-height: 1.5;
+      }
+
+      /* リデューサー実装フロー */
+      .implementation-flow {
+        margin: 40px 0;
+      }
+      .flow-step {
+        display: flex;
+        margin-bottom: 30px;
+        position: relative;
+      }
+      .step-number {
+        background-color: #1976d2;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 18px;
+        margin-right: 20px;
+        flex-shrink: 0;
+      }
+      .step-content {
+        flex-grow: 1;
+      }
+      .step-title {
+        font-weight: bold;
+        color: #1565c0;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      .step-desc {
+        margin-bottom: 10px;
+      }
+      .step-code {
+        background-color: #f5f5f5;
+        border-radius: 5px;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 14px;
+        overflow-x: auto;
+      }
+      .step-conn {
+        position: absolute;
+        left: 18px;
+        top: 36px;
+        bottom: -30px;
+        width: 2px;
+        background-color: #bbdefb;
+      }
+
+      /* リデューサーの使用例 */
+      .example {
+        background-color: #fafafa;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 30px 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .example-title {
+        font-weight: bold;
+        color: #424242;
+        font-size: 18px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .example-steps {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .example-step {
+        width: 100%;
+        margin-bottom: 20px;
+        position: relative;
+      }
+      .example-state {
+        background-color: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+      .example-action {
+        background-color: #f3e5f5;
+        border: 2px solid #9c27b0;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .example-arrow {
+        height: 30px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        margin: 10px 0;
+      }
+      .example-arrow::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 20px solid #757575;
+      }
+
+      /* リデューサーの重要ポイント */
+      .key-points {
+        background-color: #e8eaf6;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 40px 0;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .key-points-title {
+        font-weight: bold;
+        color: #303f9f;
+        font-size: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .key-point {
+        background-color: white;
+        border-left: 4px solid #3f51b5;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+      .key-point-title {
+        font-weight: bold;
+        color: #303f9f;
+        margin-bottom: 8px;
+      }
+      .key-point-desc {
+        color: #1a237e;
+      }
+
+      /* 利点 */
+      .benefits {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin: 30px 0;
+      }
+      .benefit {
+        background-color: #f1f8e9;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+      }
+      .benefit-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .benefit-icon {
+        font-size: 30px;
+        color: #689f38;
+        margin-right: 15px;
+      }
+      .benefit-title {
+        font-weight: bold;
+        color: #33691e;
+        font-size: 18px;
+      }
+      .benefit-desc {
+        color: #1b5e20;
+        line-height: 1.5;
+      }
+
+      /* コードスタイル */
+      .code-keyword {
+        color: #0033b3;
+        font-weight: bold;
+      }
+      .code-function {
+        color: #7d5bbf;
+      }
+      .code-string {
+        color: #008000;
+      }
+      .code-number {
+        color: #1750eb;
+      }
+      .code-comment {
+        color: #808080;
+        font-style: italic;
+      }
+      .code-property {
+        color: #871094;
+      }
+      .code-operator {
+        color: #5c5c5c;
+      }
+      .code-bracket {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>NgRx リデューサー（Reducer）の仕組み</h1>
+
+      <!-- リデューサー基本概念図 -->
+      <div class="reducer-concept">
+        <div class="reducer-diagram">
+          <div class="state-box">
+            <div class="box-title state-title">現在の状態 (State)</div>
+            <div class="box-content">
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-property">count</span
+              ><span class="code-operator">:</span>
+              <span class="code-number">0</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">user</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">null</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">todos</span
+              ><span class="code-operator">:</span>
+              <span class="code-bracket">[]</span><br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+
+          <div class="arrow">
+            <div class="arrow-icon">➡️</div>
+          </div>
+
+          <div class="reducer-function">
+            <div class="reducer-title">リデューサー関数</div>
+            <div class="reducer-code">
+              <span class="code-function">function</span> reducer(<br />
+              &nbsp;&nbsp;state, action<br />
+              ) <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-keyword">switch</span>(action.type)
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// 処理...</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">return</span>
+              newState;<br />
+              &nbsp;&nbsp;<span class="code-bracket">}</span><br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+
+          <div class="arrow">
+            <div class="arrow-icon">➡️</div>
+          </div>
+
+          <div class="new-state-box">
+            <div class="box-title new-state-title">新しい状態 (New State)</div>
+            <div class="box-content">
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-property">count</span
+              ><span class="code-operator">:</span>
+              <span class="code-number">1</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">user</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">null</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">todos</span
+              ><span class="code-operator">:</span>
+              <span class="code-bracket">[]</span><br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-box" style="width: 50%; margin-top: -20px">
+          <div class="box-title action-title">アクション (Action)</div>
+          <div class="box-content">
+            <span class="code-bracket">{</span><br />
+            &nbsp;&nbsp;<span class="code-property">type</span
+            ><span class="code-operator">:</span>
+            <span class="code-string">'INCREMENT'</span>,<br />
+            &nbsp;&nbsp;<span class="code-property">payload</span
+            ><span class="code-operator">:</span>
+            <span class="code-keyword">undefined</span>
+            <span class="code-comment">// 必要に応じてデータを含む</span><br />
+            <span class="code-bracket">}</span>
+          </div>
+        </div>
+      </div>
+
+      <h2>リデューサーの特徴</h2>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-header">
+            <div class="feature-icon">🧪</div>
+            <div class="feature-title">純粋関数</div>
+          </div>
+          <div class="feature-desc">
+            同じ入力（状態とアクション）に対して常に同じ出力（新しい状態）を返します。外部のデータに依存せず、副作用（APIコール、ランダム値など）を持ちません。
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-header">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-title">イミュータブル</div>
+          </div>
+          <div class="feature-desc">
+            元の状態を直接変更せず、新しい状態オブジェクトを返します。これにより、状態の変更履歴を追跡でき、予期しない変更を防ぎます。
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-header">
+            <div class="feature-icon">🔍</div>
+            <div class="feature-title">予測可能</div>
+          </div>
+          <div class="feature-desc">
+            アクションタイプに基づいて状態を更新する明確なロジックを持っています。これにより、アプリケーションの動作が予測しやすくなります。
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-header">
+            <div class="feature-icon">🧩</div>
+            <div class="feature-title">合成可能</div>
+          </div>
+          <div class="feature-desc">
+            複雑な状態ツリーを管理するために、小さなリデューサーに分割できます。各リデューサーは状態の特定の部分だけを担当します。
+          </div>
+        </div>
+      </div>
+
+      <h2>リデューサーの実装</h2>
+      <div class="implementation-flow">
+        <div class="flow-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-title">初期状態の定義</div>
+            <div class="step-desc">
+              アプリケーションの初期状態を定義します。これはアプリケーションが起動したときの状態です。
+            </div>
+            <div class="step-code">
+              <span class="code-keyword">const</span> initialState =
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-property">count</span
+              ><span class="code-operator">:</span>
+              <span class="code-number">0</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">user</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">null</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">todos</span
+              ><span class="code-operator">:</span>
+              <span class="code-bracket">[]</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">settings</span
+              ><span class="code-operator">:</span>
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-property">theme</span
+              ><span class="code-operator">:</span>
+              <span class="code-string">"light"</span>,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-property"
+                >notifications</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">true</span><br />
+              &nbsp;&nbsp;<span class="code-bracket">}</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">loading</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">false</span>,<br />
+              &nbsp;&nbsp;<span class="code-property">error</span
+              ><span class="code-operator">:</span>
+              <span class="code-keyword">null</span><br />
+              <span class="code-bracket">}</span>;
+            </div>
+          </div>
+          <div class="step-conn"></div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-title">リデューサー関数のスケルトン</div>
+            <div class="step-desc">
+              現在の状態とアクションを引数に取り、新しい状態を返す関数を定義します。
+            </div>
+            <div class="step-code">
+              <span class="code-function">function</span> rootReducer(state =
+              initialState, action) <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;<span class="code-keyword">switch</span> (action.type)
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// アクションタイプごとの処理をここに追加</span
+              ><br />
+              <br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-comment"
+                >// デフォルト</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword">default</span
+              >:<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-keyword"
+                >return</span
+              >
+              state;<br />
+              &nbsp;&nbsp;<span class="code-bracket">}</span><br />
+              <span class="code-bracket">}</span>
+            </div>
+          </div>
+          <div class="step-conn"></div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-title">アクションタイプごとの処理を実装</div>
+            <div class="step-desc">
+              各アクションタイプに対して、どのように状態を更新するかを実装します。
+            </div>
+            <div class="step-code">
+              <span class="code-comment">// カウンター関連のアクション</span
+              ><br />
+              <span class="code-keyword">case</span>
+              <span class="code-string">"INCREMENT"</span>:<br />
+              &nbsp;&nbsp;<span class="code-comment">// カウントを1増やす</span
+              ><br />
+              &nbsp;&nbsp;<span class="code-keyword">return</span>
+              <span class="code-bracket">{</span> ...state, count: state.count +
+              <span class="code-number">1</span>
+              <span class="code-bracket">}</span>;<br />
+              <br />
+              <span class="code-keyword">case</span>
+              <span class="code-string">"ADD_TODO"</span>:<br />
+              &nbsp;&nbsp;<span class="code-comment">// 新しいTODOを追加</span
+              ><br />
+              &nbsp;&nbsp;<span class="code-keyword">return</span>
+              <span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;...state,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;todos: <span class="code-bracket">[</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...state.todos,<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-bracket"
+                >{</span
+              >
+              id: Date.now(), text: action.payload, completed:
+              <span class="code-keyword">false</span>
+              <span class="code-bracket">}</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-bracket">]</span><br />
+              &nbsp;&nbsp;<span class="code-bracket">}</span>;
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>リデューサーの使用例</h2>
+      <div class="example">
+        <div class="example-title">状態更新の流れ</div>
+        <div class="example-steps">
+          <div class="example-step">
+            <div class="example-state">
+              <div class="box-title state-title">初期状態</div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">count</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">0</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">user</span
+                ><span class="code-operator">:</span>
+                <span class="code-keyword">null</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">todos</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[]</span>,<br />
+                &nbsp;&nbsp;<span class="code-comment"
+                  >// その他のプロパティ...</span
+                ><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+
+            <div class="example-action">
+              <div class="box-title action-title">
+                カウントを増加させるアクション
+              </div>
+              <div class="box-content">
+                <span class="code-bracket">{</span>
+                <span class="code-property">type</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"INCREMENT"</span>
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+
+            <div class="example-arrow"></div>
+
+            <div class="example-state">
+              <div class="box-title new-state-title">更新された状態</div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">count</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,
+                <span class="code-comment">// カウントが0から1に増加</span
+                ><br />
+                &nbsp;&nbsp;<span class="code-property">user</span
+                ><span class="code-operator">:</span>
+                <span class="code-keyword">null</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">todos</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[]</span>,<br />
+                &nbsp;&nbsp;<span class="code-comment"
+                  >// その他のプロパティは変更なし</span
+                ><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="example-step">
+            <div class="example-action">
+              <div class="box-title action-title">
+                ユーザー情報を設定するアクション
+              </div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">type</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"SET_USER"</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">payload</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">id</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,
+                <span class="code-property">name</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"山田太郎"</span>
+                <span class="code-bracket">}</span><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+
+            <div class="example-arrow"></div>
+
+            <div class="example-state">
+              <div class="box-title new-state-title">更新された状態</div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">count</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">user</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">id</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,
+                <span class="code-property">name</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"山田太郎"</span>
+                <span class="code-bracket">}</span>,
+                <span class="code-comment">// ユーザー情報が追加</span><br />
+                &nbsp;&nbsp;<span class="code-property">todos</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[]</span>,<br />
+                &nbsp;&nbsp;<span class="code-comment"
+                  >// その他のプロパティは変更なし</span
+                ><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="example-step">
+            <div class="example-action">
+              <div class="box-title action-title">TODOを追加するアクション</div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">type</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"ADD_TODO"</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">payload</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"買い物に行く"</span><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+
+            <div class="example-arrow"></div>
+
+            <div class="example-state">
+              <div class="box-title new-state-title">更新された状態</div>
+              <div class="box-content">
+                <span class="code-bracket">{</span><br />
+                &nbsp;&nbsp;<span class="code-property">count</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">user</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">{</span>
+                <span class="code-property">id</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1</span>,
+                <span class="code-property">name</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"山田太郎"</span>
+                <span class="code-bracket">}</span>,<br />
+                &nbsp;&nbsp;<span class="code-property">todos</span
+                ><span class="code-operator">:</span>
+                <span class="code-bracket">[</span><br />
+                &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-bracket">{</span>
+                <span class="code-property">id</span
+                ><span class="code-operator">:</span>
+                <span class="code-number">1615272848763</span>,
+                <span class="code-property">text</span
+                ><span class="code-operator">:</span>
+                <span class="code-string">"買い物に行く"</span>,
+                <span class="code-property">completed</span
+                ><span class="code-operator">:</span>
+                <span class="code-keyword">false</span>
+                <span class="code-bracket">}</span><br />
+                &nbsp;&nbsp;<span class="code-bracket">]</span>,
+                <span class="code-comment">// TODOリストに項目が追加</span
+                ><br />
+                &nbsp;&nbsp;<span class="code-comment"
+                  >// その他のプロパティは変更なし</span
+                ><br />
+                <span class="code-bracket">}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>リデューサーが重要な理由</h2>
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-header">
+            <div class="benefit-icon">🔮</div>
+            <div class="benefit-title">予測可能性と信頼性</div>
+          </div>
+          <div class="benefit-desc">
+            <p>
+              リデューサーは純粋関数として実装されるため、同じ入力（状態とアクション）に対して常に同じ出力（新しい状態）を返します。これにより、アプリケーションの動作が予測可能になり、バグの発生を減らすことができます。
+            </p>
+            <p>
+              副作用（APIコール、タイマー、ランダム値の生成など）がリデューサー内に存在しないため、テストが容易になり、アプリケーションの信頼性が向上します。
+            </p>
+          </div>
+        </div>
+
+        <div class="benefit">
+          <div class="benefit-header">
+            <div class="benefit-icon">🔍</div>
+            <div class="benefit-title">デバッグの容易さ</div>
+          </div>
+          <div class="benefit-desc">
+            <p>
+              リデューサーは、アクションと前の状態から新しい状態への変換を明示的に行います。これにより、状態の変化を追跡しやすくなり、「なぜこの状態になったのか」を理解しやすくなります。
+            </p>
+            <p>
+              すべての状態変更が一箇所（リデューサー）で行われるため、デバッグツールで状態の変化を時系列で追跡することが容易になります。これは「時間旅行デバッギング」と呼ばれる強力なデバッグ手法を可能にします。
+            </p>
+          </div>
+        </div>
+
+        <div class="benefit">
+          <div class="benefit-header">
+            <div class="benefit-icon">📈</div>
+            <div class="benefit-title">スケーラビリティ</div>
+          </div>
+          <div class="benefit-desc">
+            <p>
+              リデューサーは「合成可能」という特性を持っています。つまり、大きな状態ツリーを管理するために、小さなリデューサーに分割し、それらを組み合わせることができます。
+            </p>
+            <p>
+              これにより、アプリケーションが成長しても状態管理の複雑さを制御できます。各リデューサーは状態の特定の部分だけを担当するため、コードの理解と保守が容易になります。
+            </p>
+          </div>
+        </div>
+
+        <div class="benefit">
+          <div class="benefit-header">
+            <div class="benefit-icon">🧪</div>
+            <div class="benefit-title">テスト容易性</div>
+          </div>
+          <div class="benefit-desc">
+            <p>
+              リデューサーは入力と出力が明確な純粋関数であるため、テストが非常に簡単です。モックやスタブが不要で、単純に入力（状態とアクション）を与えて、期待される出力（新しい状態）をアサートするだけでテストできます。
+            </p>
+            <p>
+              これにより、テストカバレッジを高め、品質の高いコードを維持することができます。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="key-points">
+        <div class="key-points-title">リデューサーの重要なポイント</div>
+
+        <div class="key-point">
+          <div class="key-point-title">1. スイッチ文による分岐</div>
+          <div class="key-point-desc">
+            一般的にリデューサーはswitch文を使ってアクションタイプごとに処理を分岐します。これにより、コードの可読性が向上し、アクションタイプに基づいた明確な状態更新ロジックを実現できます。
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="key-point-title">2. イミュータビリティの維持</div>
+          <div class="key-point-desc">
+            スプレッド構文（...）を使って、状態を直接変更せず新しいオブジェクトを作成します。これにより、状態の変更履歴を追跡でき、予期しない変更を防ぐことができます。
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="key-point-title">3. 構造共有</div>
+          <div class="key-point-desc">
+            変更されない部分のオブジェクトは再利用されます。これはパフォーマンスの最適化につながり、メモリ使用量を削減します。
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="key-point-title">4. 単一責任</div>
+          <div class="key-point-desc">
+            実際のアプリケーションでは、状態の各部分を担当する小さなリデューサーに分割することが一般的です。これにより、コードの可読性と保守性が向上します。
+          </div>
+        </div>
+
+        <div class="key-point">
+          <div class="key-point-title">5. リデューサーの結合</div>
+          <div class="key-point-desc">
+            実際のReduxやNgRxでは、combineReducersやcreateReducerなどの関数を使用して、複数のリデューサーを組み合わせることができます。これにより、大規模なアプリケーションでも状態管理を整理しやすくなります。
+          </div>
+        </div>
+      </div>
+
+      <!-- リデューサーの合成 -->
+      <h2>リデューサーの合成</h2>
+      <div
+        style="
+          background-color: #f5f5f5;
+          border-radius: 10px;
+          padding: 20px;
+          margin: 30px 0;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        "
+      >
+        <div
+          style="
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+          "
+        >
+          大規模アプリケーションでのリデューサー構成
+        </div>
+
+        <div style="display: flex; flex-direction: column; align-items: center">
+          <!-- ルートリデューサー -->
+          <div
+            style="
+              background-color: #e8f5e9;
+              border: 2px solid #4caf50;
+              border-radius: 10px;
+              padding: 15px;
+              width: 80%;
+              margin-bottom: 20px;
+              text-align: center;
+            "
+          >
+            <div
+              style="
+                font-weight: bold;
+                color: #2e7d32;
+                margin-bottom: 10px;
+                font-size: 18px;
+              "
+            >
+              ルートリデューサー
+            </div>
+            <div style="color: #1b5e20; font-size: 14px">
+              複数のリデューサーを組み合わせて状態全体を管理
+            </div>
+          </div>
+
+          <!-- 機能別リデューサー -->
+          <div
+            style="display: flex; justify-content: space-between; width: 90%"
+          >
+            <div
+              style="
+                background-color: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 8px;
+                padding: 12px;
+                width: 22%;
+                text-align: center;
+              "
+            >
+              <div
+                style="font-weight: bold; color: #0d47a1; margin-bottom: 8px"
+              >
+                ユーザーリデューサー
+              </div>
+              <div style="color: #1565c0; font-size: 13px">
+                認証・ユーザー情報管理
+              </div>
+            </div>
+
+            <div
+              style="
+                background-color: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 8px;
+                padding: 12px;
+                width: 22%;
+                text-align: center;
+              "
+            >
+              <div
+                style="font-weight: bold; color: #0d47a1; margin-bottom: 8px"
+              >
+                TODOリデューサー
+              </div>
+              <div style="color: #1565c0; font-size: 13px">
+                TODOリストの管理
+              </div>
+            </div>
+
+            <div
+              style="
+                background-color: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 8px;
+                padding: 12px;
+                width: 22%;
+                text-align: center;
+              "
+            >
+              <div
+                style="font-weight: bold; color: #0d47a1; margin-bottom: 8px"
+              >
+                設定リデューサー
+              </div>
+              <div style="color: #1565c0; font-size: 13px">
+                アプリ設定の管理
+              </div>
+            </div>
+
+            <div
+              style="
+                background-color: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 8px;
+                padding: 12px;
+                width: 22%;
+                text-align: center;
+              "
+            >
+              <div
+                style="font-weight: bold; color: #0d47a1; margin-bottom: 8px"
+              >
+                UIリデューサー
+              </div>
+              <div style="color: #1565c0; font-size: 13px">UIの状態管理</div>
+            </div>
+          </div>
+
+          <!-- 説明 -->
+          <div
+            style="
+              margin-top: 30px;
+              padding: 15px;
+              background-color: #fff;
+              border-radius: 8px;
+              width: 80%;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            "
+          >
+            <div style="font-weight: bold; margin-bottom: 10px; color: #333">
+              リデューサーの合成（combineReducers）
+            </div>
+            <div
+              style="
+                font-family: monospace;
+                font-size: 14px;
+                background-color: #f8f9fa;
+                padding: 10px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+              "
+            >
+              <span class="code-keyword">const</span> rootReducer =
+              combineReducers(<span class="code-bracket">{</span><br />
+              &nbsp;&nbsp;user: userReducer,<br />
+              &nbsp;&nbsp;todos: todoReducer,<br />
+              &nbsp;&nbsp;settings: settingsReducer,<br />
+              &nbsp;&nbsp;ui: uiReducer<br />
+              <span class="code-bracket">}</span>);
+            </div>
+            <div style="font-size: 14px; color: #555; line-height: 1.5">
+              各リデューサーは状態の特定の部分だけを担当し、独立して開発・テストすることができます。
+              combineReducers関数によって、これらの小さなリデューサーを1つの大きなリデューサーに統合します。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- まとめ -->
+      <div
+        style="
+          background-color: #e8eaf6;
+          border-radius: 10px;
+          padding: 25px;
+          margin: 40px 0;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        "
+      >
+        <div
+          style="
+            text-align: center;
+            font-weight: bold;
+            color: #303f9f;
+            font-size: 24px;
+            margin-bottom: 25px;
+          "
+        >
+          リデューサーのまとめ
+        </div>
+
+        <div
+          style="
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+          "
+        >
+          <div
+            style="
+              font-weight: bold;
+              color: #303f9f;
+              margin-bottom: 15px;
+              font-size: 18px;
+            "
+          >
+            リデューサーは...
+          </div>
+          <ul style="margin: 0; padding: 0 0 0 20px; color: #1a237e">
+            <li style="margin-bottom: 10px">
+              現在の状態とアクションを受け取り、新しい状態を返す<strong>純粋関数</strong>です
+            </li>
+            <li style="margin-bottom: 10px">
+              アプリケーションの状態を<strong>予測可能</strong>な方法で変更します
+            </li>
+            <li style="margin-bottom: 10px">
+              状態を直接変更せず、<strong>新しい状態オブジェクト</strong>を返します
+            </li>
+            <li style="margin-bottom: 10px">
+              <strong>副作用を持たない</strong>ため、テストが容易です
+            </li>
+            <li>
+              小さな単位に<strong>分割可能</strong>で、大規模アプリケーションでもスケールします
+            </li>
+          </ul>
+        </div>
+
+        <div style="display: flex; justify-content: space-between">
+          <div
+            style="
+              width: 48%;
+              background-color: white;
+              border-radius: 8px;
+              padding: 15px;
+            "
+          >
+            <div style="font-weight: bold; color: #303f9f; margin-bottom: 10px">
+              従来の状態管理
+            </div>
+            <ul
+              style="
+                margin: 0;
+                padding: 0 0 0 20px;
+                color: #1a237e;
+                font-size: 14px;
+              "
+            >
+              <li style="margin-bottom: 8px">状態が複数の場所に分散</li>
+              <li style="margin-bottom: 8px">状態の変更が追跡しにくい</li>
+              <li style="margin-bottom: 8px">副作用が混在しがち</li>
+              <li>テストが複雑になりやすい</li>
+            </ul>
+          </div>
+
+          <div
+            style="
+              width: 48%;
+              background-color: white;
+              border-radius: 8px;
+              padding: 15px;
+            "
+          >
+            <div style="font-weight: bold; color: #303f9f; margin-bottom: 10px">
+              リデューサーベースの状態管理
+            </div>
+            <ul
+              style="
+                margin: 0;
+                padding: 0 0 0 20px;
+                color: #1a237e;
+                font-size: 14px;
+              "
+            >
+              <li style="margin-bottom: 8px">単一の情報源として状態を集約</li>
+              <li style="margin-bottom: 8px">明示的なアクションによる変更</li>
+              <li style="margin-bottom: 8px">
+                副作用の分離（エフェクトで処理）
+              </li>
+              <li>簡単にテスト可能な純粋関数</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
