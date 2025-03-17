@@ -429,18 +429,15 @@
         }
       }
 
-      @keyframes onPushBlink {
-        0%,
-        20%,
-        80%,
-        100% {
-          opacity: 0;
-        }
-        40%,
-        60% {
-          opacity: 1;
-        }
-      }
+@keyframes onPushBlink {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
 
       .note {
         font-style: italic;
