@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redux/NgRxアクション概念図</title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #1abc9c;
+        --light-blue: #e3f2fd;
+        --medium-blue: #bbdefb;
+        --border-blue: #64b5f6;
+        --dark-blue: #1976d2;
+        --very-dark-blue: #0d47a1;
+        --white: #ffffff;
+        --light-gray: #f5f5f5;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--primary-color);
+        background-color: var(--light-gray);
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: var(--white);
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: var(--box-shadow);
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--dark-blue);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 32px;
+        border-bottom: 2px solid var(--medium-blue);
+        padding-bottom: 15px;
+      }
+
+      h2 {
+        margin-top: 40px;
+        font-size: 24px;
+        border-left: 5px solid var(--dark-blue);
+        padding-left: 15px;
+      }
+
+      h3 {
+        font-size: 20px;
+        margin-top: 25px;
+      }
+
+      .section {
+        margin-bottom: 40px;
+      }
+
+      .card {
+        background-color: var(--light-blue);
+        border-radius: 8px;
+        border: 1px solid var(--border-blue);
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .card-title {
+        color: var(--very-dark-blue);
+        font-weight: bold;
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--border-blue);
+        padding-bottom: 8px;
+      }
+
+      .action-object {
+        background-color: var(--white);
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 15px;
+        font-family: monospace;
+        margin: 10px 0;
+        white-space: pre-wrap;
+        position: relative;
+        color: #333;
+        line-height: 1.5;
+      }
+
+      .property {
+        margin-left: 20px;
+      }
+
+      .property-name {
+        color: #2980b9;
+        font-weight: bold;
+      }
+
+      .property-value {
+        color: #c0392b;
+      }
+
+      .object-value {
+        color: #8e44ad;
+      }
+
+      .flow-diagram {
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+        margin: 30px 0;
+      }
+
+      .flow-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 150px;
+        position: relative;
+      }
+
+      .flow-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background-color: var(--secondary-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 18px;
+        margin-bottom: 10px;
+        z-index: 2;
+      }
+
+      .flow-text {
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        color: var(--primary-color);
+      }
+
+      .flow-arrow {
+        position: absolute;
+        top: 35px;
+        right: -25px;
+        width: 50px;
+        height: 2px;
+        background-color: var(--secondary-color);
+        z-index: 1;
+      }
+
+      .flow-arrow:after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: -4px;
+        width: 0;
+        height: 0;
+        border-left: 10px solid var(--secondary-color);
+        border-top: 5px solid transparent;
+        border-bottom: 5px solid transparent;
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        border: 1px solid var(--border-blue);
+        padding: 12px;
+        text-align: left;
+      }
+
+      .comparison-table th {
+        background-color: var(--medium-blue);
+        color: var(--very-dark-blue);
+      }
+
+      .comparison-table tr:nth-child(even) {
+        background-color: var(--light-blue);
+      }
+
+      .comparison-table tr:hover {
+        background-color: var(--medium-blue);
+      }
+
+      .highlight {
+        background-color: #fff59d;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin: 25px 0;
+      }
+
+      .grid-item {
+        background-color: var(--light-blue);
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid var(--border-blue);
+        box-shadow: var(--box-shadow);
+      }
+
+      .icon {
+        font-size: 24px;
+        margin-right: 10px;
+        color: var(--secondary-color);
+      }
+
+      .async-flow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px 0;
+      }
+
+      .async-step {
+        width: 100%;
+        max-width: 500px;
+        padding: 15px;
+        margin-bottom: 20px;
+        background-color: var(--medium-blue);
+        border-radius: 8px;
+        position: relative;
+        box-shadow: var(--box-shadow);
+      }
+
+      .async-step:after {
+        content: "";
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-top: 15px solid var(--medium-blue);
+        transform: translateX(-50%);
+      }
+
+      .async-step:last-child:after {
+        display: none;
+      }
+
+      .async-step-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: var(--very-dark-blue);
+      }
+
+      .vs-section {
+        display: flex;
+        justify-content: space-between;
+        margin: 30px 0;
+        flex-wrap: wrap;
+      }
+
+      .vs-column {
+        flex: 1;
+        min-width: 300px;
+        padding: 20px;
+        background-color: var(--light-blue);
+        border-radius: 8px;
+        margin: 0 10px 20px 10px;
+        box-shadow: var(--box-shadow);
+      }
+
+      .vs-title {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: var(--very-dark-blue);
+        border-bottom: 2px solid var(--border-blue);
+        padding-bottom: 8px;
+      }
+
+      .code-block {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        font-family: monospace;
+        overflow-x: auto;
+        margin: 15px 0;
+        border-left: 4px solid var(--dark-blue);
+      }
+
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .vs-column {
+          flex: 100%;
+          margin: 0 0 20px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Redux/NgRxにおけるアクション（Action）の図解</h1>
+
+      <div class="section">
+        <h2>アクションとは何か？</h2>
+        <div class="card">
+          <p class="card-title">定義</p>
+          <p>
+            アクションは、アプリケーション内で「何が起きたか」を表現するプレーンなJavaScriptオブジェクト。Redux/NgRxのフローにおいて、状態（State）を変更する唯一の方法はアクションを送信（ディスパッチ）すること。
+          </p>
+        </div>
+        <div class="card" style="margin-top: 15px">
+          <p class="card-title">アクションのディスパッチとは？</p>
+          <p>
+            「ディスパッチ」とは、アクションオブジェクトをRedux/NgRxのシステムに送信することです。これは「発行する」や「通知する」と考えると分かりやすいでしょう。コンポーネントやサービスが「〜が起きました」というメッセージ（アクション）をストアに届けるイメージです。
+          </p>
+          <div class="code-block">
+            // JavaScriptでのディスパッチの例 dispatch({ type: 'INCREMENT' });
+            // NgRxでのディスパッチの例 store.dispatch(increment());
+          </div>
+        </div>
+
+        <div class="flow-diagram">
+          <div class="flow-step">
+            <div class="flow-icon" style="background-color: #3498db">UI</div>
+            <div class="flow-text">ユーザーが<br />ボタンをクリック</div>
+            <div class="flow-arrow"></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon" style="background-color: #2980b9">
+              Action
+            </div>
+            <div class="flow-text">イベントを表す<br />オブジェクトを送信</div>
+            <div class="flow-arrow"></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon" style="background-color: #1f618d">
+              Reducer
+            </div>
+            <div class="flow-text">新しい状態を<br />計算</div>
+            <div class="flow-arrow"></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon" style="background-color: #154360">Store</div>
+            <div class="flow-text">状態を<br />更新</div>
+            <div class="flow-arrow"></div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-icon" style="background-color: #3498db">UI</div>
+            <div class="flow-text">画面の<br />再レンダリング</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>アクションの構造</h2>
+        <div class="grid">
+          <div class="grid-item">
+            <h3>type プロパティ (必須)</h3>
+            <p>
+              アクションの種類を識別する文字列。通常は大文字とアンダースコアを使用した定数として定義されます。
+            </p>
+            <div class="code-block">const INCREMENT = 'INCREMENT';</div>
+          </div>
+          <div class="grid-item">
+            <h3>payload (オプション)</h3>
+            <p>
+              アクションに関連するデータ。状態の更新に必要な情報を含みます。
+            </p>
+            <div class="code-block">payload: { id: 1, name: '山田太郎' }</div>
+          </div>
+          <div class="grid-item">
+            <h3>meta (オプション)</h3>
+            <p>
+              アクションに関するメタデータ。ペイロードには含めたくないが、アクションに関連する追加情報を格納します。
+            </p>
+            <div class="code-block">meta: { timestamp: Date.now() }</div>
+          </div>
+          <div class="grid-item">
+            <h3>error (オプション)</h3>
+            <p>
+              エラーを表すフラグ。trueの場合、このアクションがエラーを表すことを示します。
+            </p>
+            <div class="code-block">error: true</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>アクションの種類</h2>
+        <div class="card">
+          <p class="card-title">基本的なアクション</p>
+          <p>
+            最もシンプルなアクションは、typeプロパティだけを持つオブジェクトです。
+          </p>
+          <div class="action-object">
+            <pre>{
+  <span class="property-name">type</span>: <span class="property-value">"INCREMENT"</span>
+}</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">ペイロードを持つアクション</p>
+          <p>
+            追加のデータを含むアクション。状態の更新に必要な情報を含みます。
+          </p>
+          <div class="action-object">
+            <pre>{
+  <span class="property-name">type</span>: <span class="property-value">"ADD_NUMBER"</span>,
+  <span class="property-name">payload</span>: <span class="property-value">5</span>
+}</pre>
+          </div>
+          <div class="action-object">
+            <pre>{
+  <span class="property-name">type</span>: <span class="property-value">"SET_USER"</span>,
+  <span class="property-name">payload</span>: {
+    <span class="property-name">id</span>: <span class="property-value">1</span>,
+    <span class="property-name">name</span>: <span class="property-value">"山田太郎"</span>,
+    <span class="property-name">email</span>: <span class="property-value">"yamada@example.com"</span>
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">メタデータを持つアクション</p>
+          <p>
+            アクション自体に関する情報を含むアクション。ペイロードとは別に、追加情報を提供します。
+          </p>
+          <div class="action-object">
+            <pre>{
+  <span class="property-name">type</span>: <span class="property-value">"FETCH_DATA"</span>,
+  <span class="property-name">payload</span>: { <span class="object-value">/* 取得したデータ */</span> },
+  <span class="property-name">meta</span>: {
+    <span class="property-name">timestamp</span>: <span class="property-value">1615877400000</span>,
+    <span class="property-name">source</span>: <span class="property-value">"API"</span>,
+    <span class="property-name">requestId</span>: <span class="property-value">"abc123"</span>
+  }
+}</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">エラーアクション</p>
+          <p>
+            エラーを表すアクション。errorフラグがtrueに設定され、ペイロードにはエラー情報が含まれます。
+          </p>
+          <div class="action-object">
+            <pre>{
+  <span class="property-name">type</span>: <span class="property-value">"API_ERROR"</span>,
+  <span class="property-name">error</span>: <span class="property-value">true</span>,
+  <span class="property-name">payload</span>: <span class="object-value">Error("ネットワークエラーが発生しました")</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>アクションクリエイター</h2>
+        <p>
+          アクションオブジェクトを作成する関数。これにより、アクションの作成を抽象化し、再利用可能にします。
+        </p>
+
+        <div class="vs-section">
+          <div class="vs-column">
+            <div class="vs-title">通常のJavaScript</div>
+            <div class="code-block">
+              function addTodo(text) { return { type: "ADD_TODO", payload: { id:
+              Date.now(), text: text, completed: false } }; } // 使用例
+              dispatch(addTodo("買い物に行く"));
+            </div>
+          </div>
+          <div class="vs-column">
+            <div class="vs-title">NgRx</div>
+            <div class="code-block">
+              export const addTodo = createAction( '[Todo] Add Todo', props&lt;{
+              text: string }&gt;() ); // 使用例 store.dispatch(addTodo({ text:
+              "買い物に行く" }));
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">アクションクリエイターの利点</p>
+          <div class="grid">
+            <div class="grid-item">
+              <h3>コードの再利用性</h3>
+              <p>
+                同じアクションを複数の場所でディスパッチする場合、毎回アクションオブジェクトを手動で作成する代わりに、アクションクリエイターを呼び出すだけで済みます。
+              </p>
+            </div>
+            <div class="grid-item">
+              <h3>カプセル化</h3>
+              <p>
+                アクションの内部構造をカプセル化し、アクションを使用するコードからその詳細を隠蔽します。将来アクションの構造が変わっても、アクションクリエイターの実装だけを変更すれば良いです。
+              </p>
+            </div>
+            <div class="grid-item">
+              <h3>型安全性</h3>
+              <p>
+                TypeScriptなどの型システムと組み合わせると、アクションクリエイターは型安全なアクションの作成を保証します。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>非同期アクション</h2>
+        <p>APIリクエストやタイマーなどの非同期処理を扱うための特別な仕組み。</p>
+
+        <div class="vs-section">
+          <div class="vs-column">
+            <div class="vs-title">Redux Thunk</div>
+            <div class="async-flow">
+              <div class="async-step">
+                <div class="async-step-title">
+                  1. 関数を返すアクションクリエイター
+                </div>
+                <p>
+                  Redux
+                  Thunkを使用すると、アクションクリエイターはオブジェクトではなく関数を返すことができます。この関数は、dispatchとgetStateを引数として受け取ります。
+                </p>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">
+                  2. 開始アクションのディスパッチ
+                </div>
+                <p>
+                  非同期処理の開始時に、ローディング状態を設定するアクションをディスパッチします。
+                </p>
+                <div class="code-block">
+                  dispatch({ type: "FETCH_USERS_START" });
+                </div>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">3. 非同期処理の実行</div>
+                <p>APIリクエストやタイマーなどの非同期処理を実行します。</p>
+                <div class="code-block">fetch('/api/users')</div>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">
+                  4. 成功/失敗アクションのディスパッチ
+                </div>
+                <p>
+                  非同期処理の結果に応じて、成功アクションまたは失敗アクションをディスパッチします。
+                </p>
+                <div class="code-block">
+                  dispatch({ type: "FETCH_USERS_SUCCESS", payload: users });
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="vs-column">
+            <div class="vs-title">NgRx Effects</div>
+            <div class="async-flow">
+              <div class="async-step">
+                <div class="async-step-title">1. アクションのリスニング</div>
+                <p>特定のアクションタイプをリッスンします。</p>
+                <div class="code-block">ofType('[Users] Load Users')</div>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">2. 非同期処理の実行</div>
+                <p>
+                  アクションに応じて、サービスを呼び出して非同期処理を実行します。
+                </p>
+                <div class="code-block">
+                  mergeMap(() => this.userService.getUsers())
+                </div>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">3. 成功/失敗アクションの返却</div>
+                <p>非同期処理の結果に応じて、新しいアクションを返します。</p>
+                <div class="code-block">
+                  map(users => usersLoadedSuccess({ users }))
+                </div>
+              </div>
+              <div class="async-step">
+                <div class="async-step-title">4. エラーハンドリング</div>
+                <p>エラーが発生した場合、エラーアクションを返します。</p>
+                <div class="code-block">
+                  catchError(error => of(usersLoadedFailure({ error })))
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>アクションの重要性</h2>
+        <div class="grid">
+          <div class="grid-item">
+            <h3>明示的な状態変更の意図</h3>
+            <p>
+              アクションは、アプリケーション内で「何が起きたか」を明示的に表現します。これにより、状態変更の意図が明確になり、コードの可読性と理解しやすさが向上します。
+            </p>
+            <p>
+              例えば、直接<code>state.count++</code>のように状態を変更するのではなく、<code
+                >{ type: 'INCREMENT' }</code
+              >というアクションをディスパッチすることで、「カウントを増やす意図がある」ことを明示します。
+            </p>
+          </div>
+          <div class="grid-item">
+            <h3>イベントソーシング</h3>
+            <p>
+              アクションは、アプリケーションの「イベント履歴」として機能します。すべての状態変更がアクションとして記録されるため、アプリケーションの状態変化の完全な履歴を追跡できます。
+            </p>
+            <p>
+              この履歴を利用することで、デバッグが容易になり、「時間旅行デバッギング」や状態の再現が可能になります。
+            </p>
+          </div>
+          <div class="grid-item">
+            <h3>関心の分離</h3>
+            <p>
+              アクションは「何が起きたか」だけを表現し、「どのように状態を変更するか」はリデューサーの責務です。この分離により、コードの責務が明確になり、テストや保守が容易になります。
+            </p>
+          </div>
+          <div class="grid-item">
+            <h3>シリアライズ可能性</h3>
+            <p>
+              アクションはプレーンなJavaScriptオブジェクトであり、シリアライズ可能です。これにより、アクションをネットワーク経由で送信したり、ストレージに保存したり、デバッグツールで表示したりすることが容易になります。
+            </p>
+          </div>
+          <div class="grid-item">
+            <h3>ミドルウェアとの連携</h3>
+            <p>
+              アクションは、ミドルウェア（非同期処理、ログ記録、分析など）と連携するための統一されたインターフェースを提供します。ミドルウェアはアクションをインターセプトして処理できるため、アプリケーションの機能を拡張しやすくなります。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>アクションの命名規則</h2>
+        <div class="comparison-table">
+          <table>
+            <thead>
+              <tr>
+                <th>タイプ</th>
+                <th>規則</th>
+                <th>例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>伝統的なRedux</td>
+                <td>大文字と_（アンダースコア）区切り</td>
+                <td>ADD_TODO, FETCH_USERS_SUCCESS</td>
+              </tr>
+              <tr>
+                <td>NgRx</td>
+                <td>[ドメイン] イベント説明</td>
+                <td>[Auth] Login Success, [Todo List] Add Item</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <p class="card-title">命名規則の重要性</p>
+          <p>
+            適切な命名規則を使用することで、アクションの発生源（ドメイン）とイベントの種類が明確になり、デバッグやログ分析が容易になります。また、大規模なアプリケーションでも、アクションの整理と管理が容易になります。
+          </p>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>まとめ：アクションの設計ポイント</h2>
+        <div class="card">
+          <p class="card-title">効果的なアクション設計のために</p>
+          <ol>
+            <li>
+              <strong>シリアライズ可能性を保つ</strong
+              >：アクションは通常、シリアライズ可能なオブジェクトであるべきです（関数やシンボルなどを含まない）。
+            </li>
+            <li>
+              <strong>一貫した命名規則を使用する</strong
+              >：アクションタイプには一貫した命名規則を使用し、ドメインとイベントの種類を明確に表現します。
+            </li>
+            <li>
+              <strong>アクションクリエイターを活用する</strong
+              >：実際のアプリケーションでは、アクションオブジェクトを直接作成するのではなく、アクションクリエイター関数を使用することが一般的です。
+            </li>
+            <li>
+              <strong>非同期処理には適切なミドルウェアを使用する</strong
+              >：非同期処理を扱うには、Redux ThunkやRedux Saga、NgRx
+              Effectsなどのミドルウェアやエフェクトを使用します。
+            </li>
+            <li>
+              <strong>適切な粒度でアクションを設計する</strong
+              >：「1つのユーザーインタラクションまたはシステムイベントに対して1つのアクション」を目安にします。
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
