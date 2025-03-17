@@ -8,7 +8,7 @@
       :root {
         --primary-color: #1976d2; /* Angular Blue */
         --secondary-color: #0d47a1; /* Darker Angular Blue */
-        --accent-color: #1565C0; /* 青系統のアクセントカラー */
+        --accent-color: #1565c0; /* 青系統のアクセントカラー */
         --text-color: #333;
         --light-bg: #f8f9fa;
         --code-bg: #f5f5f5;
@@ -120,7 +120,7 @@
       }
 
       .advantage-card {
-        flex-basis: calc(33% - 20px);
+        flex-basis: 100%;
         background-color: white;
         padding: 20px;
         border-radius: 5px;
@@ -161,7 +161,7 @@
 
       .note {
         background-color: #e3f2fd;
-        border-left: 4px solid #2196F3;
+        border-left: 4px solid #2196f3;
         padding: 15px;
         margin: 20px 0;
         border-radius: 0 4px 4px 0;
@@ -182,12 +182,6 @@
         text-align: center;
         font-size: 0.9em;
         color: #666;
-      }
-
-      @media (max-width: 768px) {
-        .advantage-card {
-          flex-basis: 100%;
-        }
       }
     </style>
   </head>
@@ -929,9 +923,5 @@
         どちらも効率的なUIの更新を目指していますが、そのアプローチ方法が異なります。
       </p>
     </div>
-
-    <footer>
-      <p>© 2025 NgRx学習教材 - Angularの変更検知メカニズム</p>
-    </footer>
   </body>
 </html>
