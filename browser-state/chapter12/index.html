@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Redux/NgRxアクション概念図</title>
+    <!-- Highlight.jsのCSSとJavaScriptを読み込む -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
     <style>
       :root {
         --primary-color: #2c3e50;
@@ -303,6 +307,16 @@
         margin: 15px 0;
         border-left: 4px solid var(--dark-blue);
       }
+      
+      .code-block pre {
+        margin: 0;
+      }
+      
+      .code-block code {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+      }
 
       @media (max-width: 768px) {
         .grid {
@@ -334,8 +348,11 @@
             「ディスパッチ」とは、アクションオブジェクトをRedux/NgRxのシステムに送信することです。これは「発行する」や「通知する」と考えると分かりやすいでしょう。コンポーネントやサービスが「〜が起きました」というメッセージ（アクション）をストアに届けるイメージです。
           </p>
           <div class="code-block">
-            // JavaScriptでのディスパッチの例 dispatch({ type: 'INCREMENT' });
-            // NgRxでのディスパッチの例 store.dispatch(increment());
+            <pre><code class="language-javascript">// JavaScriptでのディスパッチの例
+dispatch({ type: 'INCREMENT' });
+
+// NgRxでのディスパッチの例
+store.dispatch(increment());</code></pre>
           </div>
         </div>
 
@@ -485,17 +502,28 @@
           <div class="vs-column">
             <div class="vs-title">通常のJavaScript</div>
             <div class="code-block">
-              function addTodo(text) { return { type: "ADD_TODO", payload: { id:
-              Date.now(), text: text, completed: false } }; } // 使用例
-              dispatch(addTodo("買い物に行く"));
+              <pre><code class="language-javascript">function addTodo(text) { 
+  return { 
+    type: "ADD_TODO", 
+    payload: { 
+      id: Date.now(), 
+      text: text, 
+      completed: false 
+    } 
+  }; 
+} // 使用例
+dispatch(addTodo("買い物に行く"));</code></pre>
             </div>
           </div>
           <div class="vs-column">
             <div class="vs-title">NgRx</div>
             <div class="code-block">
-              export const addTodo = createAction( '[Todo] Add Todo', props&lt;{
-              text: string }&gt;() ); // 使用例 store.dispatch(addTodo({ text:
-              "買い物に行く" }));
+              <pre><code class="language-javascript">export const addTodo = createAction(
+  '[Todo] Add Todo',
+  props&lt;{ text: string }&gt;()
+); 
+// 使用例 
+store.dispatch(addTodo({ text: "買い物に行く" }));</code></pre>
             </div>
           </div>
         </div>
@@ -715,4 +743,12 @@
       </div>
     </div>
   </body>
+  <script>
+    // ページ読み込み時にシンタックスハイライトを適用
+    document.addEventListener('DOMContentLoaded', (event) => {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    });
+  </script>
 </html>
