@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>メモ化（Memoization）の図式</title>
+    <style>
+      body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: #2c3e50;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+      }
+
+      .container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        flex: 1;
+        min-width: 300px;
+      }
+
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .comparison-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      .comparison-card h3 {
+        color: #3498db;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+
+      .memoization-flow {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 40px;
+      }
+
+      .flow-diagram {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 30px 0;
+      }
+
+      .flow-step {
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 15px;
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .step-number {
+        background: #3498db;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-weight: bold;
+      }
+
+      .arrow {
+        height: 30px;
+        width: 30px;
+        margin: 5px auto;
+        text-align: center;
+        font-size: 24px;
+        color: #3498db;
+      }
+
+      .fib-example {
+        margin-top: 40px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      .fib-tree {
+        margin: 30px auto;
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+      }
+
+      .fib-level {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .fib-node {
+        border: 2px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 10px;
+        font-weight: bold;
+        position: relative;
+      }
+
+      .fib-link {
+        position: absolute;
+        width: 70px;
+        height: 30px;
+        border-left: 2px solid #95a5a6;
+        border-bottom: 2px solid #95a5a6;
+        border-bottom-left-radius: 10px;
+        left: 25px;
+        bottom: -30px;
+      }
+
+      .fib-link-right {
+        border-left: none;
+        border-right: 2px solid #95a5a6;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 10px;
+        left: -45px;
+      }
+
+      .complexity-comparison {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .complexity-card {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      .complexity-card h3 {
+        color: #3498db;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .highlight {
+        background-color: #ffffcc;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+
+      .cache-simulation {
+        margin-top: 40px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      .cache-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+      }
+
+      .cache-table th,
+      .cache-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+      }
+
+      .cache-table th {
+        background-color: #f2f2f2;
+      }
+
+      .cache-hit {
+        background-color: #d4edda;
+      }
+
+      .cache-miss {
+        background-color: #f8d7da;
+      }
+
+      .code-block {
+        background-color: #f8f9fa;
+        border-left: 4px solid #3498db;
+        padding: 15px;
+        margin: 15px 0;
+        font-family: Consolas, Monaco, "Andale Mono", monospace;
+        overflow-x: auto;
+      }
+
+      .benefits {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin: 40px 0;
+      }
+
+      .benefit-card {
+        flex: 1;
+        min-width: 250px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        border-top: 4px solid #3498db;
+      }
+
+      .benefit-card h3 {
+        color: #3498db;
+        margin-top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>メモ化（Memoization）の概念と実装</h1>
+
+    <div class="container">
+      <div class="card">
+        <h2>メモ化とは？</h2>
+        <p>
+          メモ化とは、関数の結果をキャッシュし、同じ入力に対して再計算を避ける最適化技術です。特に計算コストが高い処理や、同じ入力で何度も呼び出される関数に効果的です。
+        </p>
+        <p>
+          この技術は、ReduxやNgRxなどの状態管理ライブラリのセレクタ関数でよく使われ、アプリケーションのパフォーマンスを大幅に向上させることができます。
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>メモ化の重要性</h2>
+        <ul>
+          <li>
+            <strong>計算コストの削減</strong
+            >：同じ入力に対する結果をキャッシュすることで不要な再計算を避ける
+          </li>
+          <li>
+            <strong>状態管理との相性</strong
+            >：イミュータブルな状態更新と参照比較を使用する状態管理ライブラリと相性が良い
+          </li>
+          <li>
+            <strong>リアクティブな更新の効率化</strong
+            >：状態変更が実際に影響するコンポーネントのみ更新することで効率化
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="memoization-flow">
+      <h2>メモ化のフロー</h2>
+      <div class="flow-diagram" style="margin-top: 40px">
+        <div
+          class="flow-step"
+          style="
+            width: 100%;
+            max-width: 600px;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+          "
+        >
+          <div class="step-number">1</div>
+          <div>関数呼び出し：引数（入力値）を受け取る</div>
+        </div>
+
+        <div class="arrow" style="font-size: 28px; margin: 15px 0">↓</div>
+
+        <div
+          class="flow-step"
+          style="
+            width: 100%;
+            max-width: 600px;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+          "
+        >
+          <div class="step-number">2</div>
+          <div>キャッシュチェック：入力値をキーとしてキャッシュを検索</div>
+        </div>
+
+        <div class="arrow" style="font-size: 28px; margin: 15px 0">↓</div>
+
+        <div
+          class="flow-step"
+          style="
+            width: 100%;
+            max-width: 600px;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+          "
+        >
+          <div class="step-number">3</div>
+          <div>分岐：キャッシュにヒットした？</div>
+        </div>
+
+        <div
+          style="
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+          "
+        >
+          <div
+            style="display: flex; width: 80%; justify-content: space-between"
+          >
+            <div style="text-align: center">
+              <div style="color: #3498db; font-weight: bold">Yes</div>
+              <div style="font-size: 28px">↙</div>
+            </div>
+            <div style="text-align: center">
+              <div style="color: #3498db; font-weight: bold">No</div>
+              <div style="font-size: 28px">↘</div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            margin-bottom: 15px;
+          "
+        >
+          <div
+            class="flow-step"
+            style="
+              width: 45%;
+              background-color: #e8f6ff;
+              padding: 15px;
+              border-radius: 8px;
+              border-left: 4px solid #2ecc71;
+            "
+          >
+            <div class="step-number" style="background-color: #2ecc71">4A</div>
+            <div>キャッシュから結果を取得</div>
+          </div>
+
+          <div
+            class="flow-step"
+            style="
+              width: 45%;
+              background-color: #e8f6ff;
+              padding: 15px;
+              border-radius: 8px;
+              border-left: 4px solid #e74c3c;
+            "
+          >
+            <div class="step-number" style="background-color: #e74c3c">4B</div>
+            <div>実際の計算処理を実行</div>
+          </div>
+        </div>
+
+        <div style="display: flex; width: 100%; justify-content: space-around">
+          <div style="width: 45%; text-align: center">
+            <div style="font-size: 28px; color: #2ecc71">↓</div>
+          </div>
+          <div style="width: 45%; text-align: center">
+            <div style="font-size: 28px; color: #e74c3c">↓</div>
+          </div>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            margin: 10px 0 20px 0;
+          "
+        >
+          <div style="width: 45%"></div>
+
+          <div
+            class="flow-step"
+            style="
+              width: 45%;
+              background-color: #e8f6ff;
+              padding: 15px;
+              border-radius: 8px;
+              border-left: 4px solid #e74c3c;
+            "
+          >
+            <div class="step-number" style="background-color: #e74c3c">5</div>
+            <div>結果をキャッシュに保存</div>
+          </div>
+        </div>
+
+        <div style="width: 100%; text-align: center; margin-bottom: 15px">
+          <div style="font-size: 28px">↓</div>
+        </div>
+
+        <div
+          class="flow-step"
+          style="
+            width: 100%;
+            max-width: 600px;
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin: 0 auto;
+          "
+        >
+          <div class="step-number">6</div>
+          <div>結果を返す</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison">
+      <div class="comparison-card">
+        <h3>通常の関数呼び出し</h3>
+        <p>同じ入力に対しても毎回計算が実行されます。</p>
+        <div class="code-block">
+          function fibonacci(n) {<br />
+          &nbsp;&nbsp;if (n <= 1) return n;<br />
+          &nbsp;&nbsp;return fibonacci(n - 1) + fibonacci(n - 2);<br />
+          }
+        </div>
+        <p>
+          <strong>問題点:</strong>
+          n=40の場合、約10億回以上の関数呼び出しが発生し、計算に数分〜数時間かかる可能性があります。
+        </p>
+      </div>
+
+      <div class="comparison-card">
+        <h3>メモ化された関数呼び出し</h3>
+        <p>同じ入力に対する結果はキャッシュから取得されます。</p>
+        <div class="code-block">
+          const memoizedFibonacci = memoize(function(n) {<br />
+          &nbsp;&nbsp;if (n <= 1) return n;<br />
+          &nbsp;&nbsp;return memoizedFibonacci(n - 1) + memoizedFibonacci(n -
+          2);<br />
+          });
+        </div>
+        <p>
+          <strong>利点:</strong>
+          n=40の場合でも、実際の計算回数は最大でも2n-1回程度（約79回）で、数ミリ秒で結果が得られます。
+        </p>
+      </div>
+    </div>
+
+    <div class="complexity-comparison">
+      <div class="complexity-card">
+        <h3>通常のフィボナッチ関数: O(2<sup>n</sup>)</h3>
+        <p>
+          再帰呼び出しによって、同じ値（例：fibonacci(3)）が何度も再計算されます。入力値が1増えるごとに計算量は約2倍になり、指数関数的に増加します。
+        </p>
+        <p>
+          <strong>n=10</strong>: 約10ミリ秒<br />
+          <strong>n=20</strong>: 約1秒<br />
+          <strong>n=30</strong>: 約1分<br />
+          <strong>n=40</strong>: 数時間
+        </p>
+      </div>
+
+      <div class="complexity-card">
+        <h3>メモ化されたフィボナッチ関数: O(n)</h3>
+        <p>
+          一度計算した値は再計算されないため、実際の計算回数は最大でも2n-1回程度になり、線形時間で解決できます。
+        </p>
+        <p>
+          <strong>n=10</strong>: 約1ミリ秒（2回目以降は即時）<br />
+          <strong>n=20</strong>: 約2ミリ秒（2回目以降は即時）<br />
+          <strong>n=30</strong>: 約3ミリ秒（2回目以降は即時）<br />
+          <strong>n=40</strong>: 約4ミリ秒（2回目以降は即時）
+        </p>
+      </div>
+    </div>
+
+    <div class="fib-example">
+      <h2>フィボナッチ数列の計算例（n=5）</h2>
+      <p>
+        フィボナッチ数列は、F(0) = 0, F(1) = 1, F(n) = F(n-1) + F(n-2) （n ≥
+        2）と定義される数列です。
+      </p>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          margin-top: 40px;
+          gap: 20px;
+        "
+      >
+        <div
+          style="
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-top: 4px solid #3498db;
+          "
+        >
+          <h3 style="color: #3498db; text-align: center; margin-bottom: 25px">
+            通常の再帰（再計算あり）
+          </h3>
+
+          <div
+            style="
+              width: 100%;
+              max-width: 500px;
+              margin: 0 auto;
+              position: relative;
+            "
+          >
+            <!-- ツリーの描画 -->
+            <svg
+              width="100%"
+              height="280"
+              viewBox="0 0 500 280"
+              style="overflow: visible"
+            >
+              <!-- レベル1: F(5) -->
+              <g transform="translate(250, 30)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(5)
+                </text>
+
+                <!-- F(5) から F(4) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-85"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(5) から F(3) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="85"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <!-- レベル2: F(4) と F(3) -->
+              <g transform="translate(150, 90)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(4)
+                </text>
+
+                <!-- F(4) から F(3) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(4) から F(2) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <g transform="translate(350, 90)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(3)
+                </text>
+
+                <!-- F(3) から F(2) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(3) から F(1) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <!-- レベル3: F(3), F(2), F(2), F(1) -->
+              <g transform="translate(80, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(3)
+                </text>
+
+                <!-- F(3) から F(2) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(3) から F(1) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+
+                <!-- 重複計算を示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#e74c3c"
+                  stroke-width="3"
+                  stroke-dasharray="5,5"
+                  fill="none"
+                />
+              </g>
+
+              <g transform="translate(220, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(2)
+                </text>
+
+                <!-- F(2) から F(1) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(2) から F(0) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+
+                <!-- 重複計算を示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#e74c3c"
+                  stroke-width="3"
+                  stroke-dasharray="5,5"
+                  fill="none"
+                />
+              </g>
+
+              <g transform="translate(280, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(2)
+                </text>
+
+                <!-- F(2) から F(1) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(2) から F(0) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+
+                <!-- 重複計算を示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#e74c3c"
+                  stroke-width="3"
+                  stroke-dasharray="5,5"
+                  fill="none"
+                />
+              </g>
+
+              <g transform="translate(420, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <!-- レベル4: 基本ケース（一部のみ表示） -->
+              <g transform="translate(35, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(2)
+                </text>
+                <!-- 重複計算を示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#e74c3c"
+                  stroke-width="3"
+                  stroke-dasharray="5,5"
+                  fill="none"
+                />
+              </g>
+
+              <g transform="translate(125, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <g transform="translate(185, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <g transform="translate(255, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(0)
+                </text>
+              </g>
+
+              <g transform="translate(315, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <!-- さらに続くことを示す部分 -->
+              <g transform="translate(250, 260)">
+                <text x="0" y="0" text-anchor="middle" font-style="italic">
+                  さらに続く...
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          <div
+            style="
+              margin-top: 30px;
+              padding: 15px;
+              background-color: #f8f9fa;
+              border-radius: 5px;
+              border-left: 4px solid #e74c3c;
+            "
+          >
+            <p style="margin: 0">
+              <strong>問題点:</strong>
+              赤い点線で囲まれた<strong>F(3)やF(2)が複数回計算</strong>されています。この重複計算が指数関数的な計算量増加の原因になります。
+            </p>
+          </div>
+
+          <p style="margin-top: 15px">
+            <strong>n=5の場合:</strong> 合計15回の関数呼び出しが発生
+          </p>
+          <p>
+            <strong>n=40の場合:</strong>
+            約1兆回（10^12）以上の関数呼び出しが発生し、現実的な時間では計算不可能
+          </p>
+        </div>
+
+        <div
+          style="
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-top: 4px solid #2ecc71;
+          "
+        >
+          <h3 style="color: #2ecc71; text-align: center; margin-bottom: 25px">
+            メモ化（再計算なし）
+          </h3>
+
+          <div
+            style="
+              width: 100%;
+              max-width: 500px;
+              margin: 0 auto;
+              position: relative;
+            "
+          >
+            <!-- ツリーの描画 -->
+            <svg
+              width="100%"
+              height="280"
+              viewBox="0 0 500 280"
+              style="overflow: visible"
+            >
+              <!-- レベル1: F(5) -->
+              <g transform="translate(250, 30)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(5)
+                </text>
+
+                <!-- F(5) から F(4) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-85"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(5) から F(3) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="85"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <!-- レベル2: F(4) と F(3) -->
+              <g transform="translate(150, 90)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(4)
+                </text>
+
+                <!-- F(4) から F(3) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(4) から F(2) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <g transform="translate(350, 90)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(3)
+                </text>
+
+                <!-- F(3) から F(2) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(3) から F(1) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="55"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <!-- レベル3: F(3), F(2), F(2), F(1) -->
+              <g transform="translate(80, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#2ecc71"
+                  stroke-width="2"
+                />
+                <text
+                  x="0"
+                  y="5"
+                  text-anchor="middle"
+                  font-weight="bold"
+                  fill="#2ecc71"
+                >
+                  F(3)
+                </text>
+                <!-- キャッシュヒットを示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#2ecc71"
+                  stroke-width="3"
+                  fill="none"
+                />
+                <text
+                  x="0"
+                  y="-40"
+                  text-anchor="middle"
+                  fill="#2ecc71"
+                  font-size="12"
+                >
+                  キャッシュヒット!
+                </text>
+              </g>
+
+              <g transform="translate(220, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(2)
+                </text>
+
+                <!-- F(2) から F(1) への線 -->
+                <line
+                  x1="-15"
+                  y1="20"
+                  x2="-35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <!-- F(2) から F(0) への線 -->
+                <line
+                  x1="15"
+                  y1="20"
+                  x2="35"
+                  y2="60"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+              </g>
+
+              <g transform="translate(280, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#2ecc71"
+                  stroke-width="2"
+                />
+                <text
+                  x="0"
+                  y="5"
+                  text-anchor="middle"
+                  font-weight="bold"
+                  fill="#2ecc71"
+                >
+                  F(2)
+                </text>
+                <!-- キャッシュヒットを示す印 -->
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="32"
+                  stroke="#2ecc71"
+                  stroke-width="3"
+                  fill="none"
+                />
+                <text
+                  x="0"
+                  y="-40"
+                  text-anchor="middle"
+                  fill="#2ecc71"
+                  font-size="12"
+                >
+                  キャッシュヒット!
+                </text>
+              </g>
+
+              <g transform="translate(420, 150)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <!-- レベル4: 基本ケース（一部のみ表示） -->
+              <g transform="translate(185, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(1)
+                </text>
+              </g>
+
+              <g transform="translate(255, 210)">
+                <circle
+                  cx="0"
+                  cy="0"
+                  r="25"
+                  fill="white"
+                  stroke="#3498db"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  F(0)
+                </text>
+              </g>
+
+              <!-- キャッシュの内容を示す部分 -->
+              <g transform="translate(400, 210)">
+                <rect
+                  x="-70"
+                  y="-25"
+                  width="140"
+                  height="50"
+                  rx="5"
+                  ry="5"
+                  fill="#e8f8f5"
+                  stroke="#2ecc71"
+                  stroke-width="2"
+                />
+                <text x="0" y="5" text-anchor="middle" font-weight="bold">
+                  キャッシュ: {F(2):1, F(3):2}
+                </text>
+              </g>
+            </svg>
+          </div>
+
+          <div
+            style="
+              margin-top: 30px;
+              padding: 15px;
+              background-color: #e8f8f5;
+              border-radius: 5px;
+              border-left: 4px solid #2ecc71;
+            "
+          >
+            <p style="margin: 0">
+              <strong>効率化:</strong>
+              緑色で示された<strong>F(3)やF(2)は一度計算された後キャッシュに保存</strong>され、以降は再計算せずにキャッシュから結果を取得します。
+            </p>
+          </div>
+
+          <p style="margin-top: 15px">
+            <strong>n=5の場合:</strong> 実際の計算回数は9回のみ（40%の削減）
+          </p>
+          <p>
+            <strong>n=40の場合:</strong> 最大79回程度の計算で解決（指数関数的 →
+            線形へ改善）
+          </p>
+
+          <div
+            style="
+              background-color: #f0f8ff;
+              padding: 10px;
+              border-radius: 5px;
+              margin-top: 15px;
+            "
+          >
+            <p style="margin: 0; font-size: 14px">
+              <strong>計算量:</strong> O(2<sup>n</sup>) → O(n) に削減
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cache-simulation">
+      <h2>メモ化のキャッシュシミュレーション</h2>
+      <p>
+        以下は、fibonacci(5)を計算する際のキャッシュの状態変化を示しています。
+      </p>
+
+      <table class="cache-table">
+        <thead>
+          <tr>
+            <th>ステップ</th>
+            <th>関数呼び出し</th>
+            <th>キャッシュ状態</th>
+            <th>結果</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cache-miss">
+            <td>1</td>
+            <td>memoizedFib(5)</td>
+            <td>{}</td>
+            <td>?</td>
+            <td>キャッシュミス</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>2</td>
+            <td>memoizedFib(4)</td>
+            <td>{}</td>
+            <td>?</td>
+            <td>キャッシュミス</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>3</td>
+            <td>memoizedFib(3)</td>
+            <td>{}</td>
+            <td>?</td>
+            <td>キャッシュミス</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>4</td>
+            <td>memoizedFib(2)</td>
+            <td>{}</td>
+            <td>?</td>
+            <td>キャッシュミス</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>5</td>
+            <td>memoizedFib(1)</td>
+            <td>{}</td>
+            <td>1</td>
+            <td>基本ケース</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>6</td>
+            <td>memoizedFib(0)</td>
+            <td>{"1": 1}</td>
+            <td>0</td>
+            <td>基本ケース</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>memoizedFib(2) 完了</td>
+            <td>{"1": 1, "0": 0}</td>
+            <td>1</td>
+            <td>1 + 0 = 1</td>
+          </tr>
+          <tr class="cache-miss">
+            <td>8</td>
+            <td>memoizedFib(1)</td>
+            <td>{"1": 1, "0": 0, "2": 1}</td>
+            <td>1</td>
+            <td>キャッシュヒット</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>memoizedFib(3) 完了</td>
+            <td>{"1": 1, "0": 0, "2": 1}</td>
+            <td>2</td>
+            <td>1 + 1 = 2</td>
+          </tr>
+          <tr class="cache-hit">
+            <td>10</td>
+            <td>memoizedFib(2)</td>
+            <td>{"1": 1, "0": 0, "2": 1, "3": 2}</td>
+            <td>1</td>
+            <td>キャッシュヒット</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>memoizedFib(4) 完了</td>
+            <td>{"1": 1, "0": 0, "2": 1, "3": 2}</td>
+            <td>3</td>
+            <td>2 + 1 = 3</td>
+          </tr>
+          <tr class="cache-hit">
+            <td>12</td>
+            <td>memoizedFib(3)</td>
+            <td>{"1": 1, "0": 0, "2": 1, "3": 2, "4": 3}</td>
+            <td>2</td>
+            <td>キャッシュヒット</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>memoizedFib(5) 完了</td>
+            <td>{"1": 1, "0": 0, "2": 1, "3": 2, "4": 3}</td>
+            <td>5</td>
+            <td>3 + 2 = 5</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>注意点：</p>
+      <ul>
+        <li>
+          <span class="cache-miss">赤色の行</span
+          >はキャッシュミス（計算が必要）を示します
+        </li>
+        <li>
+          <span class="cache-hit">緑色の行</span
+          >はキャッシュヒット（計算不要）を示します
+        </li>
+        <li>
+          通常の再帰では、同じ値に対する計算が繰り返し実行されますが、メモ化では一度計算した値はキャッシュから取得されます
+        </li>
+      </ul>
+    </div>
+
+    <div class="benefits">
+      <div class="benefit-card">
+        <h3>計算コストの削減</h3>
+        <p>
+          同じ入力に対する再計算を避けることで、特に複雑な計算や大量のデータ処理が必要な場合に効果的です。
+        </p>
+        <p>例: フィルタリング、ソート、集計などの処理</p>
+      </div>
+
+      <div class="benefit-card">
+        <h3>状態管理との相性</h3>
+        <p>
+          ReduxやNgRxなどのイミュータブルな状態管理ライブラリと相性が良く、セレクタ関数でよく使用されます。
+        </p>
+        <p>
+          状態が変更されていない場合、参照が同じままなので、キャッシュされた結果を返すことができます。
+        </p>
+      </div>
+
+      <div class="benefit-card">
+        <h3>リアクティブな更新の効率化</h3>
+        <p>
+          UIの更新を効率化し、状態の変更が実際に関連するコンポーネントにのみ影響するようにします。
+        </p>
+        <p>
+          例:
+          1000項目のリストで1項目だけが変更された場合、メモ化により変更された項目だけを効率的に更新
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>実装のポイント</h2>
+      <ul>
+        <li>
+          <strong>クロージャの活用</strong>:
+          関数内で定義された関数（内部関数）が、外部関数のスコープにある変数（キャッシュ）を参照
+        </li>
+        <li>
+          <strong>純粋関数</strong>:
+          メモ化は同じ入力に対して常に同じ出力を返す純粋関数に対してのみ有効
+        </li>
+        <li>
+          <strong>キャッシュ管理</strong>:
+          長期間実行されるアプリケーションでは、キャッシュサイズの制限やLRU（Least
+          Recently Used）などの戦略が必要
+        </li>
+        <li>
+          <strong>パフォーマンス測定</strong>:
+          メモ化自体にもオーバーヘッドがあるため、実際のパフォーマンス向上を測定することが重要
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>
