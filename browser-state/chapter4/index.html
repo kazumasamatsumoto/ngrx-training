@@ -255,37 +255,24 @@
       <div class="code-example">
         <h2>イミュータブルな状態更新の例</h2>
         <div class="code-block">
-          <span class="comment">// イミュータブルな状態更新の例</span>
-          <span class="comment"
-            >//
-            この関数は、元の状態を変更せず、新しい状態オブジェクトを返します</span
-          >
-          <span class="keyword">function</span> updateCount(state, newCount) {
-          <span class="comment"
-            >//
-            スプレッド構文（...）を使用して、元のオブジェクトのプロパティをコピーし、</span
-          >
-          <span class="comment"
-            >// count
-            プロパティだけを新しい値で上書きした新しいオブジェクトを作成</span
-          >
-          <span class="keyword">return</span> { ...state, count: newCount }; 
-          }
+<span class="comment">// イミュータブルな状態更新の例</span>
+<span class="comment">// この関数は、元の状態を変更せず、新しい状態オブジェクトを返します</span>
+<span class="keyword">function</span> updateCount(state, newCount) {
+  <span class="comment">// スプレッド構文（...）を使用して、元のオブジェクトのプロパティをコピーし、</span>
+  <span class="comment">// count プロパティだけを新しい値で上書きした新しいオブジェクトを作成</span>
+  <span class="keyword">return</span> { ...state, count: newCount }; 
+}
 
-          <span class="comment">// 初期状態</span>
-          <span class="keyword">const</span> state1 = { count: 0, name:
-          <span class="string">"App"</span> };
-          <span class="comment"
-            >// 状態を更新（実際には新しい状態オブジェクトを作成）</span
-          >
-          <span class="keyword">const</span> state2 = updateCount(state1, 1);
+<span class="comment">// 初期状態</span>
+<span class="keyword">const</span> state1 = { count: 0, name: <span class="string">"App"</span> };
 
-          <span class="comment">// 結果の確認</span>
-          console.log(state1.count);
-          <span class="comment">// 0（元の状態は変更されていない）</span>
-          console.log(state2.count);
-          <span class="comment">// 1（新しい状態）</span> console.log(state1 ===
-          state2); <span class="comment">// false（異なる参照）</span>
+<span class="comment">// 状態を更新（実際には新しい状態オブジェクトを作成）</span>
+<span class="keyword">const</span> state2 = updateCount(state1, 1);
+
+<span class="comment">// 結果の確認</span>
+console.log(state1.count);  <span class="comment">// 0（元の状態は変更されていない）</span>
+console.log(state2.count);  <span class="comment">// 1（新しい状態）</span>
+console.log(state1 === state2);  <span class="comment">// false（異なる参照）</span>
         </div>
       </div>
 
