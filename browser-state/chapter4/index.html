@@ -156,6 +156,10 @@
         left: 50%;
         transform: translateX(-50%);
         white-space: nowrap;
+        z-index: 10;
+        width: auto;
+        min-width: 150px;
+        text-align: center;
       }
 
       .notes {
@@ -265,7 +269,8 @@
             >// count
             プロパティだけを新しい値で上書きした新しいオブジェクトを作成</span
           >
-          <span class="keyword">return</span> { ...state, count: newCount }; }
+          <span class="keyword">return</span> { ...state, count: newCount }; 
+          }
 
           <span class="comment">// 初期状態</span>
           <span class="keyword">const</span> state1 = { count: 0, name:
