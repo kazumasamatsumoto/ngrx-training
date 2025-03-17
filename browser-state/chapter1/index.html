@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+        color: #333;
+      }
+
+      .title {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 40px;
+        font-style: italic;
+      }
+
+      .memory-model {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 50px;
+        gap: 30px;
+      }
+
+      .memory-region {
+        flex: 1;
+        border: 2px solid #333;
+        border-radius: 10px;
+        padding: 20px;
+        position: relative;
+        min-height: 400px;
+      }
+
+      .region-title {
+        position: absolute;
+        top: -15px;
+        left: 20px;
+        background-color: #f8f9fa;
+        padding: 0 10px;
+        font-weight: bold;
+      }
+
+      .stack {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+      }
+
+      .heap {
+        background-color: #f1f8e9;
+        border-color: #8bc34a;
+      }
+
+      .memory-item {
+        border-radius: 6px;
+        padding: 10px;
+        margin: 10px 0;
+        position: relative;
+      }
+
+      .code-example {
+        font-family: monospace;
+        background-color: #f5f5f5;
+        border-left: 4px solid #ddd;
+        padding: 15px;
+        margin: 20px 0;
+        overflow-x: auto;
+      }
+
+      .primitive {
+        background-color: #bbdefb;
+        border: 1px solid #64b5f6;
+      }
+
+      .reference {
+        background-color: #c8e6c9;
+        border: 1px solid #81c784;
+      }
+
+      .reference-value {
+        background-color: #dcedc8;
+        border: 1px solid #aed581;
+        margin-top: 10px;
+      }
+
+      .variable-box {
+        border: 1px solid #999;
+        border-radius: 4px;
+        padding: 5px 10px;
+        margin-top: 5px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .variable-name {
+        font-weight: bold;
+      }
+
+      .variable-value {
+        font-family: monospace;
+      }
+
+      .reference-arrow {
+        position: absolute;
+        right: -30px;
+        top: 50%;
+        width: 30px;
+        height: 2px;
+        background-color: #f44336;
+      }
+
+      .reference-arrow::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: -4px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid #f44336;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+      }
+
+      .arrow-container {
+        position: relative;
+        height: 2px;
+        margin: 10px 0;
+      }
+
+      .long-arrow {
+        position: absolute;
+        top: 0;
+        left: 10px;
+        width: calc(100% - 70px);
+        height: 2px;
+        background-color: #f44336;
+      }
+
+      .long-arrow::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -4px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid #f44336;
+        border-top: 4px solid transparent;
+        border-bottom: 4px solid transparent;
+      }
+
+      .address {
+        font-family: monospace;
+        font-size: 0.8em;
+        color: #777;
+        margin-top: 5px;
+      }
+
+      .stack-frame {
+        border: 1px dashed #2196f3;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 15px 0;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+
+      .stack-frame-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #0d47a1;
+      }
+
+      .heap-object {
+        border: 1px dashed #8bc34a;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 15px 0;
+        background-color: rgba(255, 255, 255, 0.7);
+      }
+
+      .memory-address {
+        font-family: monospace;
+        font-size: 0.7em;
+        color: #888;
+        position: absolute;
+        top: 2px;
+        right: 5px;
+      }
+
+      .explanation {
+        background-color: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 15px;
+        margin: 30px 0 20px;
+      }
+
+      .example-section {
+        margin-top: 40px;
+      }
+
+      .example-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 5px;
+      }
+
+      .note {
+        font-size: 0.9em;
+        color: #666;
+        font-style: italic;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 class="title">JavaScriptのメモリ管理モデル</h1>
+    <p class="subtitle">スタック領域とヒープ領域の関係性</p>
+
+    <div class="explanation">
+      <p>
+        JavaScriptは他の多くのプログラミング言語と同様に、メモリを主に2つの領域に分けて管理しています：<strong>スタック</strong>と<strong>ヒープ</strong>です。これらの領域には異なる特性があり、異なる種類のデータが格納されます。
+      </p>
+    </div>
+
+    <div class="example-section">
+      <h2 class="example-title">基本的なメモリモデル</h2>
+
+      <div class="memory-model">
+        <div class="memory-region stack">
+          <div class="region-title">スタック領域</div>
+          <p>高速にアクセス可能な固定サイズの領域</p>
+          <ul>
+            <li>プリミティブ型の値</li>
+            <li>関数呼び出し情報</li>
+            <li>ヒープ上のオブジェクトへの参照</li>
+          </ul>
+          <div class="note">LIFOの仕組み（Last In, First Out）で管理</div>
+        </div>
+
+        <div class="memory-region heap">
+          <div class="region-title">ヒープ領域</div>
+          <p>動的に確保される大きなメモリ領域</p>
+          <ul>
+            <li>オブジェクト</li>
+            <li>配列</li>
+            <li>関数</li>
+            <li>大きな文字列など</li>
+          </ul>
+          <div class="note">ガベージコレクションの対象となる領域</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-section">
+      <h2 class="example-title">プリミティブ型のメモリ割り当て例</h2>
+
+      <div class="code-example">
+        // プリミティブ型の例 let a = 5; let b = "hello"; let c = true;
+      </div>
+
+      <div class="memory-model">
+        <div class="memory-region stack">
+          <div class="region-title">スタック領域</div>
+
+          <div class="stack-frame">
+            <div class="stack-frame-title">グローバルスコープ</div>
+
+            <div class="memory-item primitive">
+              <div class="memory-address">0x1001</div>
+              <div class="variable-box">
+                <span class="variable-name">a</span>
+                <span class="variable-value">5</span>
+              </div>
+              <div class="note">数値は直接スタックに格納</div>
+            </div>
+
+            <div class="memory-item primitive">
+              <div class="memory-address">0x1002</div>
+              <div class="variable-box">
+                <span class="variable-name">b</span>
+                <span class="variable-value">"hello"</span>
+              </div>
+              <div class="note">短い文字列は直接スタックに格納されることも</div>
+            </div>
+
+            <div class="memory-item primitive">
+              <div class="memory-address">0x1003</div>
+              <div class="variable-box">
+                <span class="variable-name">c</span>
+                <span class="variable-value">true</span>
+              </div>
+              <div class="note">真偽値も直接スタックに格納</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="memory-region heap">
+          <div class="region-title">ヒープ領域</div>
+          <div class="note" style="margin-top: 30px; text-align: center">
+            プリミティブ型の場合、通常はヒープ領域を使用しない<br />
+            （ただし長い文字列などは実装によりヒープに格納されることもある）
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-section">
+      <h2 class="example-title">オブジェクト型のメモリ割り当て例</h2>
+
+      <div class="code-example">
+        // オブジェクト型の例 let obj1 = { name: "Alice", age: 30 }; let obj2 =
+        obj1; // 参照のコピー let arr = [1, 2, 3, 4, 5];
+      </div>
+
+      <div class="memory-model">
+        <div class="memory-region stack">
+          <div class="region-title">スタック領域</div>
+
+          <div class="stack-frame">
+            <div class="stack-frame-title">グローバルスコープ</div>
+
+            <div class="memory-item reference">
+              <div class="memory-address">0x2001</div>
+              <div class="variable-box">
+                <span class="variable-name">obj1</span>
+                <span class="variable-value">0xA001</span>
+              </div>
+              <div class="arrow-container">
+                <div class="long-arrow"></div>
+              </div>
+              <div class="note">
+                obj1はヒープ上のオブジェクトへの参照（メモリアドレス）を保持
+              </div>
+            </div>
+
+            <div class="memory-item reference">
+              <div class="memory-address">0x2002</div>
+              <div class="variable-box">
+                <span class="variable-name">obj2</span>
+                <span class="variable-value">0xA001</span>
+              </div>
+              <div class="arrow-container">
+                <div class="long-arrow"></div>
+              </div>
+              <div class="note">
+                obj2はobj1と同じメモリアドレスを保持（同じオブジェクトを参照）
+              </div>
+            </div>
+
+            <div class="memory-item reference">
+              <div class="memory-address">0x2003</div>
+              <div class="variable-box">
+                <span class="variable-name">arr</span>
+                <span class="variable-value">0xB001</span>
+              </div>
+              <div class="arrow-container">
+                <div class="long-arrow"></div>
+              </div>
+              <div class="note">arrはヒープ上の配列への参照を保持</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="memory-region heap">
+          <div class="region-title">ヒープ領域</div>
+
+          <div class="heap-object">
+            <div class="memory-address">0xA001</div>
+            <div class="variable-box">
+              <span class="variable-name">オブジェクト</span>
+              <span class="variable-value">{ name: "Alice", age: 30 }</span>
+            </div>
+            <div class="note">実際のオブジェクトデータはヒープに格納</div>
+          </div>
+
+          <div class="heap-object">
+            <div class="memory-address">0xB001</div>
+            <div class="variable-box">
+              <span class="variable-name">配列</span>
+              <span class="variable-value">[1, 2, 3, 4, 5]</span>
+            </div>
+            <div class="note">配列もヒープに格納</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="explanation">
+      <h3>JavaScriptのメモリ管理の特徴</h3>
+      <ul>
+        <li>
+          <strong>自動メモリ管理:</strong>
+          JavaScriptはガベージコレクションを使用して自動的にメモリを管理します
+        </li>
+        <li>
+          <strong>値渡しと参照渡し:</strong>
+          プリミティブ型は値渡し、オブジェクト型は参照渡しとなります
+        </li>
+        <li>
+          <strong>クロージャ:</strong>
+          関数内の変数は、その関数のスコープが終了しても、クロージャによって維持されることがあります
+        </li>
+        <li>
+          <strong>最適化:</strong>
+          実際のメモリ管理はJavaScriptエンジンの実装によって異なり、様々な最適化が行われています
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

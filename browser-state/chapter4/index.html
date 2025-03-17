@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>イミュータブルな状態更新</title>
+    <style>
+      :root {
+        --primary-color: #3f51b5;
+        --secondary-color: #ff4081;
+        --highlight-color: #4caf50;
+        --light-bg: #f5f5f5;
+        --dark-bg: #263238;
+        --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: var(--light-bg);
+        color: #333;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+
+      .intro {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+      }
+
+      .benefits {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .benefit-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+      }
+
+      .benefit-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .benefit-card h3 {
+        color: var(--primary-color);
+        margin-top: 0;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .code-example {
+        background-color: var(--dark-bg);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+        box-shadow: var(--card-shadow);
+        overflow-x: auto;
+      }
+
+      .code-block {
+        font-family: "Courier New", Courier, monospace;
+        white-space: pre;
+        line-height: 1.4;
+      }
+
+      .comment {
+        color: #8bc34a;
+      }
+
+      .keyword {
+        color: #ff9800;
+      }
+
+      .string {
+        color: #9c27b0;
+      }
+
+      .visual-example {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .visual-example {
+          flex-direction: row;
+        }
+      }
+
+      .state-container {
+        flex: 1;
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+        position: relative;
+      }
+
+      .state-object {
+        border: 2px solid var(--primary-color);
+        border-radius: 5px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .state-props {
+        margin: 0.5rem 0;
+      }
+
+      .arrow {
+        text-align: center;
+        font-size: 2rem;
+        color: var(--secondary-color);
+        position: relative;
+      }
+
+      .arrow-label {
+        font-size: 0.9rem;
+        background-color: var(--secondary-color);
+        color: white;
+        padding: 0.3rem 0.6rem;
+        border-radius: 3px;
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      .notes {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 5px;
+        box-shadow: var(--card-shadow);
+      }
+
+      .notes h3 {
+        color: var(--primary-color);
+        margin-top: 0;
+      }
+
+      .note-item {
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .note-item:before {
+        content: "•";
+        color: var(--secondary-color);
+        font-weight: bold;
+        margin-right: 0.5rem;
+      }
+
+      .highlight {
+        background-color: rgba(76, 175, 80, 0.2);
+        padding: 0.2rem;
+        border-radius: 3px;
+        font-weight: 500;
+      }
+
+      /* アニメーション */
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .animate-pulse {
+        animation: pulse 2s infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Chapter 4: イミュータブルな状態更新</h1>
+      </header>
+
+      <div class="intro">
+        <p>
+          状態管理における重要な原則である<strong>「イミュータビリティ（不変性）」</strong>について説明します。ReduxやNgRxなどの状態管理ライブラリでは、状態を直接変更せず、常に新しい状態オブジェクトを作成します。これにより、参照による変更検知が可能になり、予測可能な状態管理が実現します。
+        </p>
+      </div>
+
+      <div class="benefits">
+        <div class="benefit-card">
+          <h3>変更検知の効率化</h3>
+          <p>
+            参照比較（===）は非常に高速です。イミュータブルな更新パターンを使うことで、変更があった場合は必ず新しいオブジェクト参照が作成されるため、単純な参照比較だけで変更を検知できます。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>予測可能性と信頼性</h3>
+          <p>
+            状態を直接変更すると、いつどこで変更されたのか追跡が困難になります。イミュータブルな更新では、状態の変更が明示的かつ集中管理されるため、アプリケーションの動作が予測しやすくなります。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>デバッグの容易さ</h3>
+          <p>
+            各状態の変更が新しいオブジェクトとして保存されるため、状態の履歴を簡単に追跡できます。これにより「タイムトラベルデバッギング」のような高度なデバッグ手法が可能になります。
+          </p>
+        </div>
+        <div class="benefit-card">
+          <h3>並行処理の安全性</h3>
+          <p>
+            イミュータブルなデータは、複数のプロセスや関数から同時にアクセスされても変更されることがないため、競合状態（race
+            condition）を避けやすくなります。これは特に非同期処理が多いWebアプリケーションで重要です。
+          </p>
+        </div>
+      </div>
+
+      <div class="code-example">
+        <h2>イミュータブルな状態更新の例</h2>
+        <div class="code-block">
+          <span class="comment">// イミュータブルな状態更新の例</span>
+          <span class="comment"
+            >//
+            この関数は、元の状態を変更せず、新しい状態オブジェクトを返します</span
+          >
+          <span class="keyword">function</span> updateCount(state, newCount) {
+          <span class="comment"
+            >//
+            スプレッド構文（...）を使用して、元のオブジェクトのプロパティをコピーし、</span
+          >
+          <span class="comment"
+            >// count
+            プロパティだけを新しい値で上書きした新しいオブジェクトを作成</span
+          >
+          <span class="keyword">return</span> { ...state, count: newCount }; }
+
+          <span class="comment">// 初期状態</span>
+          <span class="keyword">const</span> state1 = { count: 0, name:
+          <span class="string">"App"</span> };
+          <span class="comment"
+            >// 状態を更新（実際には新しい状態オブジェクトを作成）</span
+          >
+          <span class="keyword">const</span> state2 = updateCount(state1, 1);
+
+          <span class="comment">// 結果の確認</span>
+          console.log(state1.count);
+          <span class="comment">// 0（元の状態は変更されていない）</span>
+          console.log(state2.count);
+          <span class="comment">// 1（新しい状態）</span> console.log(state1 ===
+          state2); <span class="comment">// false（異なる参照）</span>
+        </div>
+      </div>
+
+      <div class="visual-example">
+        <div class="state-container">
+          <h3>初期状態 (state1)</h3>
+          <div class="state-object">
+            <p class="state-props"><strong>count:</strong> 0</p>
+            <p class="state-props"><strong>name:</strong> "App"</p>
+          </div>
+          <p>メモリアドレス: 0x12345</p>
+        </div>
+
+        <div class="arrow">
+          <div class="arrow-label">updateCount(state1, 1)</div>
+          →
+        </div>
+
+        <div class="state-container">
+          <h3>新しい状態 (state2)</h3>
+          <div class="state-object animate-pulse">
+            <p class="state-props">
+              <strong>count:</strong> <span class="highlight">1</span>
+            </p>
+            <p class="state-props"><strong>name:</strong> "App"</p>
+          </div>
+          <p>メモリアドレス: 0x67890</p>
+          <p>
+            <strong>state1 === state2</strong> は <strong>false</strong> を返す
+          </p>
+        </div>
+      </div>
+
+      <div class="notes">
+        <h3>イミュータビリティの重要ポイント:</h3>
+        <div class="note-item">
+          イミュータビリティは、状態の変更履歴を追跡しやすくします（デバッグが容易になる）
+        </div>
+        <div class="note-item">参照の変更により、変更検知が高速になります</div>
+        <div class="note-item">
+          タイムトラベルデバッギングなどの高度な機能が可能になります
+        </div>
+        <div class="note-item">
+          ネストされたオブジェクトを更新する場合は、すべてのレベルで新しいオブジェクトを作成する必要があります
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
