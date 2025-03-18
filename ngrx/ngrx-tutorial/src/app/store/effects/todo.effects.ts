@@ -110,3 +110,46 @@ export class TodoEffects {
     );
   });
 }
+
+
+/**
+ * このファイルは NgRx のエフェクト（Effects）を実装したものです。エフェクトは Angular アプリケーションにおける副作用を処理するための仕組みです。
+
+`TodoEffects` クラスでは以下の4つのエフェクトが定義されています：
+
+1. `loadTodos$` - Todo リストの読み込み処理
+   - `loadTodos` アクションが発行されると実行
+   - `switchMap` を使用して新しいリクエストが来たら前のリクエストをキャンセル
+   - 成功時は `loadTodosSuccess`、失敗時は `loadTodosFailure` アクションを発行
+
+2. `addTodo$` - 新しい Todo の追加処理
+   - `addTodo` アクションが発行されると実行
+   - `mergeMap` を使用して複数のリクエストを並行処理
+   - 成功時は `addTodoSuccess`、失敗時は `addTodoFailure` アクションを発行
+
+3. `toggleTodo$` - Todo の完了状態切り替え処理
+   - `toggleTodo` アクションが発行されると実行
+   - ユーザーインタラクションからストアの更新までの流れを実装
+   - 成功時は `toggleTodoSuccess`、失敗時は `toggleTodoFailure` アクションを発行
+
+4. `deleteTodo$` - Todo の削除処理
+   - `deleteTodo` アクションが発行されると実行
+   - 成功時は ID のみを返す形で `deleteTodoSuccess`、失敗時は `deleteTodoFailure` アクションを発行
+
+これらのエフェクトはそれぞれ特定のアクションをリッスンし、`TodoService` を使って API 通信などの副作用を実行し、その結果に基づいて新しいアクションをディスパッチします。
+
+ */
+
+/**
+ * Effectsは「何かが起きたら、こういう処理をする」という形で実装されています。
+
+具体的には：
+1. あるアクションが発行されたら（例：`loadTodos`）
+2. それを検知して特定の処理を実行（例：`TodoService.getTodos()`でAPIからデータ取得）
+3. その処理の結果に応じて別のアクションを発行（成功なら`loadTodosSuccess`、失敗なら`loadTodosFailure`）
+
+これにより、コンポーネントはアクションを発行するだけで、その後の複雑な処理や副作用（API通信など）はEffectsが担当します。コンポーネントはその結果を気にせず、Storeの変更を購読するだけで済むようになります。
+
+この「トリガー→処理→結果に応じたアクション」という流れがNgRxのEffectsの基本パターンです。
+
+ */
